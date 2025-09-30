@@ -1,0 +1,58 @@
+from asyncpg import DuplicateObjectError
+
+from database.db import Sqlbase
+
+
+class CreateTable(Sqlbase):
+
+    async def init_pgcrypto(self):
+        try:
+            await self.execute_query("""CREATE EXTENSION pgcrypto;""")
+        except DuplicateObjectError:
+            pass
+
+    async def create_accepted_users_table(self):
+        await self.execute_query("""CREATE TABLE IF NOT EXISTS user_data (
+        id SERIAL PRIMARY KEY,
+        chat_id TEXT UNIQUE NOT NULL,
+        date_accept_politics TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Moscow'),
+        date_accept_user_politics TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Moscow'));""")
+
+    async def create_course_table(self):
+        await self.execute_query("""CREATE TABLE IF NOT EXISTS courses (
+                                    id SERIAL PRIMARY KEY,
+                                    name TEXT UNIQUE NOT NULL,
+                                    price INTEGER DEFAULT 1000,
+                                    channel_id TEXT UNIQUE NOT NULL,
+                                    description TEXT NOT NULL)""")
+
+    async def create_transaction_table(self):
+        await self.execute_query("""CREATE TABLE IF NOT EXISTS all_transaction (
+        id SERIAL PRIMARY KEY,
+        chat_id TEXT UNIQUE NOT NULL,
+        name_transaction TEXT,
+        date_pay TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Moscow'),
+        transaction_id TEXT UNIQUE NOT NULL,
+        amount INTEGER NOT NULL,
+        FOREIGN KEY (name_transaction) REFERENCES courses (name) ON DELETE CASCADE,
+        FOREIGN KEY (chat_id) REFERENCES user_data (chat_id) ON DELETE CASCADE);""")
+
+    async def create_settings_table(self):
+        await self.execute_query("""CREATE TABLE IF NOT EXISTS settings_table(
+        id SERIAL PRIMARY KEY,
+        admin_chat_id TEXT DEFAULT '0',
+        password_admin TEXT NOT NULL,
+        user_politics TEXT DEFAULT '0',
+        kond_politics TEXT DEFAULT '0'
+        );""")
+
+        if await self.execute_query("""SELECT password_admin FROM settings_table LIMIT 1"""):
+            pass
+        else:
+            await self.execute_query("""INSERT INTO settings_table (password_admin)
+                                        VALUES (crypt($1, gen_salt('bf')));""", ("a894KdsAt3st_3Mv#_0#",))
+
+    async def delete_all_table(self):
+        await self.execute_query("""DROP TABLE IF EXISTS all_transaction;""")
+        await self.execute_query("""DROP TABLE IF EXISTS settings_table;""")
+        await self.execute_query("""DROP TABLE IF EXISTS profiles;""")

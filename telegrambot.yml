@@ -1,0 +1,14 @@
+name: TelegramSaleCourse
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - pip>=21.0.1
+  - setuptools>=51.00.0
+  - python>=3.10.0
+  - asyncpg
+  - pip:
+    - aiogram>=3.5.0
+    - python-dotenv
