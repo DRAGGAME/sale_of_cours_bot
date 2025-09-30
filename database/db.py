@@ -1,5 +1,4 @@
-from typing import Union, Optional
-
+from typing import Union
 import asyncpg
 
 from config import HOST, PASSWORD, DATABASE, USER
@@ -9,34 +8,42 @@ pg_user = USER
 pg_password = PASSWORD
 pg_database = DATABASE
 
+_pool: asyncpg.Pool | None = None
+
 
 class Sqlbase:
 
     def __init__(self, pool=None):
-        self.pool = pool
+        self.pool = pool or _pool
 
-    async def connect(self):
-        try:
-            self.pool = await asyncpg.create_pool(
+    @classmethod
+    async def init_pool(cls, **kwargs):
+        """
+        Создаёт глобальный пул, который будет использоваться всеми наследниками.
+        """
+        global _pool
+        if _pool is None:
+            _pool = await asyncpg.create_pool(
                 host=pg_host,
                 user=pg_user,
                 password=pg_password,
                 database=pg_database,
                 min_size=1,
-                max_size=10000
+                max_size=10_000,
+                **kwargs
             )
-        except Exception as e:
-            print(f"Ошибка подключения к базе данных: {e}")
-            raise
+        return _pool
 
-    async def close(self):
-        if self.pool:
-            await self.pool.close()
+    @classmethod
+    async def close_pool(cls):
+        global _pool
+        if _pool:
+            await _pool.close()
+            _pool = None
 
     async def execute_query(self, query, params=None) -> Union[tuple, int]:
-
         if not self.pool:
-            raise ValueError("Пул соединений не создан. Убедитесь, что вызвали connect().")
+            raise ValueError("Пул соединений не создан. Убедитесь, что вызвали Sqlbase.init_pool().")
 
         try:
             async with self.pool.acquire() as connection:
@@ -47,4 +54,3 @@ class Sqlbase:
         except asyncpg.PostgresError as e:
             print(f"Ошибка выполнения запроса: {e}")
             raise
-

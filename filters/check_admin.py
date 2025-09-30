@@ -18,13 +18,11 @@ class CheckAdminDefault(BaseFilter):
         self.sqlbase = sqlbase
 
     async def __call__(self, message_or_callback: Union[Message, CallbackQuery]) -> bool:
-        await self.sqlbase.connect()
 
         if isinstance(message_or_callback, Message):
             user = await self.sqlbase.select_user(str(message_or_callback.chat.id))
         else:
             user = await self.sqlbase.select_user(str(message_or_callback.message.chat.id))
-        await self.sqlbase.close()
         print(user)
         if not user:
             return True
