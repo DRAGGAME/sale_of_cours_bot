@@ -79,6 +79,18 @@ class FabricInline(KeyboardFactory):
         self.builder_inline.row(back_button, next_button)
         return self.builder_inline.as_markup()
 
+    async def inline_back_button(self):
+        await self.create_builder_inline()
+
+        back_button = InlineKeyboardButton(
+            text="Назад",
+            callback_data=ChoiceCallback(
+                accept=True,
+            ).pack()
+        )
+
+        self.builder_inline.add(back_button)
+        return self.builder_inline.as_markup()
 
 
 

@@ -23,3 +23,7 @@ class UserOperation(Sqlbase):
             return True
         else:
             return False
+
+    async def select_course(self, id_course: int) -> Tuple:
+        course_data = await self.execute_query("""SELECT * FROM courses WHERE id = $1;""", (id_course, ))
+        return course_data[0]

@@ -4,6 +4,7 @@ from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import CallbackQuery
+from asyncpg import UniqueViolationError
 
 from config import bot
 from database.admin_operations import AdminOperation
@@ -43,7 +44,10 @@ class BeginHandler:
 
     async def callback_politics_handler(self, callback: CallbackQuery, callback_data: CallbackData):
         if callback_data.accept:
-            await self.admin_database.insert_new_user(str(callback.message.chat.id))
+            try:
+                await self.admin_database.insert_new_user(str(callback.message.chat.id))
+            except UniqueViolationError:
+                pass
             all_courses = await self.database.select_all_courses()
             if all_courses:
                 kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)

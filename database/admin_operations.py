@@ -7,3 +7,4 @@ class AdminOperation(UserOperation):
         await self.execute_query("""
         INSERT INTO user_data (chat_id) VALUES ($1);
         """, (chat_id,))
+

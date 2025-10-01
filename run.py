@@ -9,6 +9,8 @@ from database.create_table import CreateTable
 from database.user_operation import UserOperation
 from database.db import Sqlbase
 from handlers.begin_handlers import BeginHandler
+from handlers.choice_handlers import ChoiceHandlers
+from keyboards.menu_fabric import ChoiceCourse
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -25,8 +27,8 @@ class TelegramBot:
         self.dp = Dispatcher()
 
         self.begin_handlers = BeginHandler()
-
-        self.dp.include_router(self.begin_handlers.router)
+        self.choice_handlers = ChoiceHandlers()
+        self.dp.include_routers(self.begin_handlers.router, self.choice_handlers.router_choice)
 
     async def run_main(self):
         # один раз инициализируем пул
