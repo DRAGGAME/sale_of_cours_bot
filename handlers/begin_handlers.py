@@ -44,7 +44,12 @@ class BeginHandler:
     async def callback_politics_handler(self, callback: CallbackQuery, callback_data: CallbackData):
         if callback_data.accept:
             await self.admin_database.insert_new_user(str(callback.message.chat.id))
-            await callback.message.edit_text("Выберите курс")
+            all_courses = await self.database.select_all_courses()
+            if all_courses:
+                kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
+                await callback.message.edit_text("Выберите курс", reply_markup=kb)
+            else:
+                await callback.message.edit_text("Нет доступных курсов...")
         else:
             await callback.message.edit_text("Вы отказались\nДальнейшее пользование ботом невозможно")
             await asyncio.sleep(20)
