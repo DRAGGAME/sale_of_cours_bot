@@ -3,13 +3,14 @@ import asyncio
 from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.filters.callback_data import CallbackData
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from asyncpg import UniqueViolationError
 
 from config import bot
 from database.admin_operations import AdminOperation
 from database.user_operation import UserOperation
-from filters.check_admin import CheckAdminDefault
+from filters.check_admin import CheckRegistryUser, CheckSelectUser
 from keyboards.menu_fabric import ChoiceCallback, FabricInline
 from aiogram.types import Message
 
@@ -26,9 +27,13 @@ class BeginHandler:
         self.register_handlers()
 
     def register_handlers(self):
-        self.router.message.register(self.start_handler, CheckAdminDefault(self.database), CommandStart())
+        self.router.message.register(self.start_handler, CheckRegistryUser(self.database), CommandStart())
+
         self.router.callback_query.register(
             self.callback_politics_handler, ChoiceCallback.filter(F.accept))
+
+        self.router.message.register(
+            self.start_handler_nach_pay, CheckSelectUser(self.database), CommandStart())
 
     async def start_handler(self, message: Message):
         politics = await self.database.select_politics()
@@ -42,7 +47,9 @@ class BeginHandler:
             reply_markup=keyboard_start
         )
 
-    async def callback_politics_handler(self, callback: CallbackQuery, callback_data: CallbackData):
+    async def callback_politics_handler(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+        await state.clear()
+
         if callback_data.accept:
             try:
                 await self.admin_database.insert_new_user(str(callback.message.chat.id))
@@ -50,7 +57,9 @@ class BeginHandler:
                 pass
             all_courses = await self.database.select_all_courses()
             if all_courses:
+                await state.update_data(all_courses=all_courses)
                 kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
+
                 await callback.message.edit_text("Выберите курс", reply_markup=kb)
             else:
                 await callback.message.edit_text("Нет доступных курсов...")
@@ -60,3 +69,14 @@ class BeginHandler:
             await callback.message.delete()
 
         await callback.answer()
+
+    async def start_handler_nach_pay(self, message: Message, state: FSMContext):
+        await state.clear()
+
+        all_courses = await self.database.select_all_courses()
+        if all_courses:
+            await state.update_data(all_courses=all_courses)
+            kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
+            await message.answer("Выберите курс", reply_markup=kb)
+        else:
+            await message.answer("Нет доступных курсов...")

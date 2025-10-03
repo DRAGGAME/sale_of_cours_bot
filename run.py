@@ -11,6 +11,7 @@ from database.db import Sqlbase
 from handlers.begin_handlers import BeginHandler
 from handlers.choice_handlers import ChoiceHandlers
 from keyboards.menu_fabric import ChoiceCourse
+from handlers.pay_handlers import PayHandlers
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -28,10 +29,11 @@ class TelegramBot:
 
         self.begin_handlers = BeginHandler()
         self.choice_handlers = ChoiceHandlers()
-        self.dp.include_routers(self.begin_handlers.router, self.choice_handlers.router_choice)
+        self.pay_handlers = PayHandlers()
+
+        self.dp.include_routers(self.begin_handlers.router, self.choice_handlers.router_choice, self.pay_handlers.router_pay)
 
     async def run_main(self):
-        # один раз инициализируем пул
 
         sqlbase_create_table = CreateTable()
 
@@ -40,7 +42,7 @@ class TelegramBot:
         await sqlbase_create_table.create_course_table()
         await sqlbase_create_table.create_transaction_table()
 
-        await self.dp.start_polling(self.bot)
+        await self.dp.start_polling(self.bot, skip_updates=False)
 
         await Sqlbase.close_pool()
 

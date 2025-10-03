@@ -12,7 +12,7 @@ from logger import logger
 # from logger import logger
 
 
-class CheckAdminDefault(BaseFilter):
+class CheckRegistryUser(BaseFilter):
 
     def __init__(self, sqlbase: UserOperation):
         self.sqlbase = sqlbase
@@ -23,8 +23,19 @@ class CheckAdminDefault(BaseFilter):
             user = await self.sqlbase.select_user(str(message_or_callback.chat.id))
         else:
             user = await self.sqlbase.select_user(str(message_or_callback.message.chat.id))
-        print(user)
         if not user:
+            return True
+        else:
+            return False
+
+
+class CheckSelectUser(BaseFilter):
+    def __init__(self, sqlbase: UserOperation):
+        self.sqlbase = sqlbase
+
+    async def __call__(self, message: Message) -> bool:
+        user = await self.sqlbase.select_user(str(message.chat.id))
+        if user:
             return True
         else:
             return False

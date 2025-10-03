@@ -24,17 +24,16 @@ class CreateTable(Sqlbase):
                                     name TEXT UNIQUE NOT NULL,
                                     price INTEGER DEFAULT 1000,
                                     channel_id TEXT UNIQUE NOT NULL,
-                                    description TEXT NOT NULL)""")
+                                    description VARCHAR(255) NOT NULL)""")
 
     async def create_transaction_table(self):
         await self.execute_query("""CREATE TABLE IF NOT EXISTS all_transaction (
         id SERIAL PRIMARY KEY,
-        chat_id TEXT UNIQUE NOT NULL,
+        chat_id TEXT NOT NULL,
         name_transaction TEXT,
         date_pay TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Moscow'),
         transaction_id TEXT UNIQUE NOT NULL,
         amount INTEGER NOT NULL,
-        FOREIGN KEY (name_transaction) REFERENCES courses (name) ON DELETE CASCADE,
         FOREIGN KEY (chat_id) REFERENCES user_data (chat_id) ON DELETE CASCADE);""")
 
     async def create_settings_table(self):

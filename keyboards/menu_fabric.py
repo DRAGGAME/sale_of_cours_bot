@@ -8,8 +8,17 @@ from database.user_operation import UserOperation
 from keyboards.fabirc_kb import KeyboardFactory
 from functions.courses import select_courses
 
+
+class PayCourse(CallbackData, prefix="pay_prefix"):
+    action: str
+    price: Optional[int]
+
+
+
 class ChoiceCallback(CallbackData, prefix="Accept_politics"):
     accept: bool
+
+
 
 
 class ChoiceCourse(CallbackData, prefix="choice_course"):
@@ -47,7 +56,7 @@ class FabricInline(KeyboardFactory):
     async def inline_choice_course_keyboard(self, courses: list, page: int):
         await self.create_builder_inline()
 
-        for course in courses[0]:
+        for course in courses[page]:
             button_course = InlineKeyboardButton(
                 text=f"{course[1]}",
                 callback_data=ChoiceCourse(
@@ -79,17 +88,44 @@ class FabricInline(KeyboardFactory):
         self.builder_inline.row(back_button, next_button)
         return self.builder_inline.as_markup()
 
-    async def inline_back_button(self):
+    async def inline_pay_keyboard(self, price: int):
         await self.create_builder_inline()
-
+        pay_button = InlineKeyboardButton(
+            text=f"Купить за {price}",
+            callback_data=PayCourse(
+                action="pay",
+                price=price,
+            ).pack()
+        )
         back_button = InlineKeyboardButton(
             text="Назад",
             callback_data=ChoiceCallback(
                 accept=True,
             ).pack()
         )
+        self.builder_inline.add(pay_button)
+        self.builder_inline.row(back_button)
+        return self.builder_inline.as_markup()
 
-        self.builder_inline.add(back_button)
+    async def payment_create_kb(self, price: int):
+        await self.create_builder_inline()
+
+        pay = InlineKeyboardButton(
+            text=f"Оплатить {price} RUB",
+            pay=True,
+        )
+
+        button_back = InlineKeyboardButton(
+            text="Отмена платежа",
+            callback_data=PayCourse(
+                action="cancel_payment",
+                price=None,
+            ).pack()
+        )
+
+        self.builder_inline.add(pay)
+        self.builder_inline.row(button_back)
+
         return self.builder_inline.as_markup()
 
 
