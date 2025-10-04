@@ -34,8 +34,8 @@ class ChoiceHandlers:
 
         await callback.message.edit_text(f"<pre>"
                                              f"Название курса: {course[1]}"
-                                             f"\nОписание курса: {course[-1]}"
-                                             f"\n\nЦена курса: {course[-3]}\n</pre>", reply_markup=keyboard_back)
+                                             f"\nОписание курса: {course[-2]}"
+                                             f"\n\nЦена курса: {course[-4]}\n</pre>", reply_markup=keyboard_back)
         await callback.answer()
 
     async def choice_page(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):

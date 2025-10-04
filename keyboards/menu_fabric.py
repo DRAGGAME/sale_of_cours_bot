@@ -19,8 +19,6 @@ class ChoiceCallback(CallbackData, prefix="Accept_politics"):
     accept: bool
 
 
-
-
 class ChoiceCourse(CallbackData, prefix="choice_course"):
     number_course_id: Optional[int]
     page: Optional[int]
@@ -127,6 +125,7 @@ class FabricInline(KeyboardFactory):
         self.builder_inline.row(button_back)
 
         return self.builder_inline.as_markup()
+
 
 
 

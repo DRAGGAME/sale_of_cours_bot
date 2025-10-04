@@ -2,7 +2,7 @@ from typing import Union
 
 from aiogram.filters import BaseFilter
 
-from database.admin_operations import UserOperation
+from database.admin_operations import UserOperation, AdminOperation
 
 from aiogram.types import Message, CallbackQuery
 
@@ -36,6 +36,19 @@ class CheckSelectUser(BaseFilter):
     async def __call__(self, message: Message) -> bool:
         user = await self.sqlbase.select_user(str(message.chat.id))
         if user:
+            return True
+        else:
+            return False
+
+
+class CheckAdmin(BaseFilter):
+    def __init__(self, sqlbase: Union[UserOperation(), AdminOperation()]):
+        self.sqlbase = sqlbase
+
+    async def __call__(self, message: Message) -> bool:
+        admin = await self.sqlbase.select_admin_chat()
+        print(admin)
+        if admin == str(message.chat.id):
             return True
         else:
             return False

@@ -27,3 +27,8 @@ class UserOperation(Sqlbase):
     async def select_course(self, id_course: int) -> Tuple:
         course_data = await self.execute_query("""SELECT * FROM courses WHERE id = $1;""", (id_course, ))
         return course_data[0]
+
+    async def select_admin_chat(self) -> str:
+        admin_chat = await self.execute_query("""SELECT admin_chat_id FROM settings_table""")
+
+        return admin_chat[0][0]

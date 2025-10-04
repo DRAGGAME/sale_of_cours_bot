@@ -3,14 +3,13 @@ import asyncio
 import logging
 
 from aiogram import Dispatcher
+
 from config import bot
-from database.admin_operations import AdminOperation
 from database.create_table import CreateTable
-from database.user_operation import UserOperation
 from database.db import Sqlbase
+from handlers.admin_handlers import AdminHandlers
 from handlers.begin_handlers import BeginHandler
 from handlers.choice_handlers import ChoiceHandlers
-from keyboards.menu_fabric import ChoiceCourse
 from handlers.pay_handlers import PayHandlers
 
 logging.basicConfig(
@@ -26,12 +25,13 @@ class TelegramBot:
     def __init__(self):
         self.bot = bot
         self.dp = Dispatcher()
-
+        self.admin_handlers = AdminHandlers()
         self.begin_handlers = BeginHandler()
         self.choice_handlers = ChoiceHandlers()
         self.pay_handlers = PayHandlers()
 
-        self.dp.include_routers(self.begin_handlers.router, self.choice_handlers.router_choice, self.pay_handlers.router_pay)
+        self.dp.include_routers(self.begin_handlers.router, self.choice_handlers.router_choice,
+                                self.pay_handlers.router_pay, self.admin_handlers.router)
 
     async def run_main(self):
 
@@ -50,6 +50,7 @@ class TelegramBot:
 async def main():
     await Sqlbase.init_pool()
     tg_bot = TelegramBot()
+
     await tg_bot.run_main()
 
 

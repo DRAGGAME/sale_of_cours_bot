@@ -24,7 +24,8 @@ class CreateTable(Sqlbase):
                                     name TEXT UNIQUE NOT NULL,
                                     price INTEGER DEFAULT 1000,
                                     channel_id TEXT UNIQUE NOT NULL,
-                                    description VARCHAR(255) NOT NULL)""")
+                                    description VARCHAR(255) NOT NULL,
+                                    status BOOLEAN DEFAULT TRUE)""")
 
     async def create_transaction_table(self):
         await self.execute_query("""CREATE TABLE IF NOT EXISTS all_transaction (
@@ -34,13 +35,13 @@ class CreateTable(Sqlbase):
         date_pay TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Moscow'),
         transaction_id TEXT UNIQUE NOT NULL,
         amount INTEGER NOT NULL,
-        FOREIGN KEY (chat_id) REFERENCES user_data (chat_id) ON DELETE CASCADE);""")
+        FOREIGN KEY (chat_id) REFERENCES user_data (chat_id) ON DELETE RESTRICT);""")
 
     async def create_settings_table(self):
         await self.execute_query("""CREATE TABLE IF NOT EXISTS settings_table(
         id SERIAL PRIMARY KEY,
         admin_chat_id TEXT DEFAULT '0',
-        password_admin TEXT NOT NULL,
+        password_admin TEXT ,
         user_politics TEXT DEFAULT '0',
         kond_politics TEXT DEFAULT '0'
         );""")
