@@ -22,9 +22,13 @@ dp = Dispatcher()
 
 
 class TelegramBot:
+    """
+    Класс главный телеграм-бота
+    """
     def __init__(self):
         self.bot = bot
         self.dp = Dispatcher()
+
         self.admin_handlers = AdminHandlers()
         self.begin_handlers = BeginHandler()
         self.choice_handlers = ChoiceHandlers()
@@ -34,9 +38,13 @@ class TelegramBot:
                                 self.pay_handlers.router_pay, self.admin_handlers.router)
 
     async def run_main(self):
-
+        """
+        Основной run
+        :return:
+        """
         sqlbase_create_table = CreateTable()
 
+        await sqlbase_create_table.init_pgcrypto()
         await sqlbase_create_table.create_accepted_users_table()
         await sqlbase_create_table.create_settings_table()
         await sqlbase_create_table.create_course_table()

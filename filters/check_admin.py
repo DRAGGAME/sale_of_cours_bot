@@ -30,6 +30,9 @@ class CheckRegistryUser(BaseFilter):
 
 
 class CheckSelectUser(BaseFilter):
+    """
+    Класс для проверок на существование пользователя
+    """
     def __init__(self, sqlbase: UserOperation):
         self.sqlbase = sqlbase
 
@@ -42,12 +45,15 @@ class CheckSelectUser(BaseFilter):
 
 
 class CheckAdmin(BaseFilter):
-    def __init__(self, sqlbase: Union[UserOperation(), AdminOperation()]):
+    """
+    Проверка на админа
+    """
+    def __init__(self, sqlbase: Union[UserOperation, AdminOperation]):
         self.sqlbase = sqlbase
 
     async def __call__(self, message: Message) -> bool:
         admin = await self.sqlbase.select_admin_chat()
-        print(admin)
+
         if admin == str(message.chat.id):
             return True
         else:

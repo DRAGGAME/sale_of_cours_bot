@@ -6,12 +6,20 @@ from database.db import Sqlbase
 class CreateTable(Sqlbase):
 
     async def init_pgcrypto(self):
+        """
+        Инициализация pgcrypto
+        :return:
+        """
         try:
             await self.execute_query("""CREATE EXTENSION pgcrypto;""")
         except DuplicateObjectError:
             pass
 
     async def create_accepted_users_table(self):
+        """
+        Пользовательские данные
+        :return:
+        """
         await self.execute_query("""CREATE TABLE IF NOT EXISTS user_data (
         id SERIAL PRIMARY KEY,
         chat_id TEXT UNIQUE NOT NULL,
@@ -19,6 +27,10 @@ class CreateTable(Sqlbase):
         date_accept_user_politics TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Moscow'));""")
 
     async def create_course_table(self):
+        """
+        Таблица с курсасм
+        :return:
+        """
         await self.execute_query("""CREATE TABLE IF NOT EXISTS courses (
                                     id SERIAL PRIMARY KEY,
                                     name TEXT UNIQUE NOT NULL,
@@ -28,6 +40,10 @@ class CreateTable(Sqlbase):
                                     status BOOLEAN DEFAULT TRUE)""")
 
     async def create_transaction_table(self):
+        """
+        Для транзакий
+        :return:
+        """
         await self.execute_query("""CREATE TABLE IF NOT EXISTS all_transaction (
         id SERIAL PRIMARY KEY,
         chat_id TEXT NOT NULL,
@@ -38,6 +54,10 @@ class CreateTable(Sqlbase):
         FOREIGN KEY (chat_id) REFERENCES user_data (chat_id) ON DELETE RESTRICT);""")
 
     async def create_settings_table(self):
+        """
+        Админ-таблица
+        :return:
+        """
         await self.execute_query("""CREATE TABLE IF NOT EXISTS settings_table(
         id SERIAL PRIMARY KEY,
         admin_chat_id TEXT DEFAULT '0',
@@ -53,4 +73,8 @@ class CreateTable(Sqlbase):
                                         VALUES (crypt($1, gen_salt('bf')));""", ("a894KdsAt3st_3Mv#_0#",))
 
     async def delete_settings_table_table(self):
+        """
+        Удаление таболицы настроек
+        :return:
+        """
         await self.execute_query("""DROP TABLE IF EXISTS public.settings_table CASCADE;""")

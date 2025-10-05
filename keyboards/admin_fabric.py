@@ -1,7 +1,7 @@
 from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from keyboards.fabirc_kb import KeyboardFactory
 
@@ -31,6 +31,9 @@ class UpdatePoliticInline(CallbackData, prefix="update_politic_inline"):
 
 
 class AdminFabric(KeyboardFactory):
+    """
+    Админские клавиатуры
+    """
     def __init__(self):
         self.button_in_main = InlineKeyboardButton(
             text="В главное меню",
@@ -41,7 +44,11 @@ class AdminFabric(KeyboardFactory):
 
         super().__init__()
 
-    async def main_menu_admin(self):
+    async def main_menu_admin(self) -> InlineKeyboardMarkup:
+        """
+        Главная админская панель
+        :return:
+        """
         await self.create_builder_inline()
         button_add_course = InlineKeyboardButton(
             text="Добавить курс",
@@ -85,7 +92,11 @@ class AdminFabric(KeyboardFactory):
 
         return self.builder_inline.as_markup()
 
-    async def inline_course_button(self):
+    async def inline_course_button(self) -> InlineKeyboardMarkup:
+        """
+        Для создания курса
+        :return:
+        """
         await self.create_builder_inline()
 
         button_name = InlineKeyboardButton(
@@ -129,7 +140,13 @@ class AdminFabric(KeyboardFactory):
 
         return self.builder_inline.as_markup()
 
-    async def inline_activate_or_deac_course(self, courses: list, page: int):
+    async def inline_activate_or_deac_course(self, courses: list, page: int) -> InlineKeyboardMarkup:
+        """
+        Для активации и деактивации курсов
+        :param courses: - курсы, сделанные по-парно
+        :param page: - текущая страница(взятая пара)
+        :return:
+        """
         await self.create_builder_inline()
 
         for course in courses[page]:
@@ -165,7 +182,13 @@ class AdminFabric(KeyboardFactory):
         self.builder_inline.row(self.button_in_main)
         return self.builder_inline.as_markup()
 
-    async def inline_back_keyboard(self, status: bool, id_course: Optional[int]):
+    async def inline_back_keyboard(self, status: bool, id_course: Optional[int]) -> InlineKeyboardMarkup:
+        """
+        Активирование и деактивирование курса
+        :param status:
+        :param id_course:
+        :return:
+        """
         await self.create_builder_inline()
 
         activate_button = InlineKeyboardButton(
@@ -190,7 +213,11 @@ class AdminFabric(KeyboardFactory):
 
         return self.builder_inline.as_markup()
 
-    async def politics_keyboard(self):
+    async def politics_keyboard(self) -> InlineKeyboardMarkup:
+        """
+        Изменение политики кондфиницальности
+        :return:
+        """
         await self.create_builder_inline()
 
         kond_politic = InlineKeyboardButton(
@@ -213,7 +240,7 @@ class AdminFabric(KeyboardFactory):
 
         return self.builder_inline.as_markup()
 
-    async def default_back_in_panel(self):
+    async def default_back_in_panel(self)  -> InlineKeyboardMarkup:
         await self.create_builder_inline()
 
         self.builder_inline.row(self.button_in_main)

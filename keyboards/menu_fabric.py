@@ -1,18 +1,14 @@
 from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import KeyboardButton, InlineKeyboardButton
-import numpy as np
-from config import bot
-from database.user_operation import UserOperation
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
 from keyboards.fabirc_kb import KeyboardFactory
-from functions.courses import select_courses
 
 
 class PayCourse(CallbackData, prefix="pay_prefix"):
     action: str
     price: Optional[int]
-
 
 
 class ChoiceCallback(CallbackData, prefix="Accept_politics"):
@@ -26,11 +22,18 @@ class ChoiceCourse(CallbackData, prefix="choice_course"):
 
 
 class FabricInline(KeyboardFactory):
+    """
+    ПОльзовательские клавиатуры
+    """
 
     def __init__(self):
         super().__init__()
 
-    async def inline_choice_keyboard(self):
+    async def inline_choice_keyboard(self) -> InlineKeyboardMarkup:
+        """
+        Принятие и отказ от политик
+        :return:
+        """
         await self.create_builder_inline()
 
         yes_button = InlineKeyboardButton(
@@ -51,7 +54,13 @@ class FabricInline(KeyboardFactory):
         self.builder_inline.add(no_button)
         return self.builder_inline.as_markup()
 
-    async def inline_choice_course_keyboard(self, courses: list, page: int):
+    async def inline_choice_course_keyboard(self, courses: list, page: int) -> InlineKeyboardMarkup:
+        """
+        По-парное создание кнопок для курсов
+        :param courses:
+        :param page:
+        :return:
+        """
         await self.create_builder_inline()
 
         for course in courses[page]:
@@ -86,7 +95,12 @@ class FabricInline(KeyboardFactory):
         self.builder_inline.row(back_button, next_button)
         return self.builder_inline.as_markup()
 
-    async def inline_pay_keyboard(self, price: int):
+    async def inline_pay_keyboard(self, price: int) -> InlineKeyboardMarkup:
+        """
+        Покупка курса
+        :param price:
+        :return:
+        """
         await self.create_builder_inline()
         pay_button = InlineKeyboardButton(
             text=f"Купить за {price}",
@@ -106,6 +120,11 @@ class FabricInline(KeyboardFactory):
         return self.builder_inline.as_markup()
 
     async def payment_create_kb(self, price: int):
+        """
+        Покупка курса, окончательная
+        :param price:
+        :return:
+        """
         await self.create_builder_inline()
 
         pay = InlineKeyboardButton(
@@ -125,7 +144,3 @@ class FabricInline(KeyboardFactory):
         self.builder_inline.row(button_back)
 
         return self.builder_inline.as_markup()
-
-
-
-

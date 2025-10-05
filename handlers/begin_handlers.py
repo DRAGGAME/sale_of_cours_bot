@@ -13,16 +13,21 @@ from database.admin_operations import AdminOperation
 from database.user_operation import UserOperation
 from filters.check_admin import CheckRegistryUser, CheckSelectUser
 from keyboards.menu_fabric import ChoiceCallback, FabricInline
+from logger import logger
 
 
 class BeginHandler:
-
+    """
+    Класс, созданный для начала работы с ботом
+    """
     def __init__(self):
         self.bot = bot
 
         self.router = Router()
-        self.database = UserOperation()  # пул уже есть
+
+        self.database = UserOperation()
         self.admin_database = AdminOperation()
+
         self.begin_fabric_keyboard = FabricInline()
 
         self.register_handlers()
@@ -30,15 +35,24 @@ class BeginHandler:
     def register_handlers(self):
         self.router.message.register(self.start_handler, CheckRegistryUser(self.database), CommandStart())
 
-        self.router.callback_query.register(
-            self.callback_politics_handler, ChoiceCallback.filter(F))
-
         self.router.message.register(
             self.start_handler_nach_pay, CheckSelectUser(self.database), CommandStart())
 
+        self.router.callback_query.register(
+            self.callback_politics_handler, ChoiceCallback.filter(F))
+
+
     async def start_handler(self, message: Message, state: FSMContext):
+        """
+        На команду /start
+        :param message:
+        :param state:
+        :return:
+        """
+
         politics = await self.database.select_politics()
         keyboard_start = await self.begin_fabric_keyboard.inline_choice_keyboard()
+
         await state.clear()
         await message.delete()
         await message.answer(
@@ -50,35 +64,54 @@ class BeginHandler:
         )
 
     async def callback_politics_handler(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
-        await state.clear()
+        """
+        Тот же start, но для callback
+        :param callback:
+        :param callback_data:
+        :param state:
+        :return:
+        """
+
         if callback_data.accept:
             try:
+                logger.info("Появился новый пользователь, принявший политики\n"
+                            f"{callback.message.from_user.username}\n"
+                            f"callback_data: {callback.message.chat.id}\n")
                 await self.admin_database.insert_new_user(str(callback.message.chat.id))
             except UniqueViolationError:
                 pass
             all_courses = await self.database.select_all_courses()
+
             if all_courses:
+
                 await state.update_data(all_courses=all_courses)
                 kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
 
                 await callback.message.edit_text("Выберите курс", reply_markup=kb)
             else:
-                await callback.message.edit_text("Нет доступных курсов...")
+                logger.warning("Нет доступных курсов")
+                await callback.message.edit_text("Нет доступных курсов...\n\nПропишите /start")
         else:
 
             await callback.message.edit_text("Вы отказались\nДальнейшее пользование ботом невозможно")
             await asyncio.sleep(20)
             await callback.message.delete()
 
+        await state.clear()
         await callback.answer()
 
     async def start_handler_nach_pay(self, message: Message, state: FSMContext):
         await state.clear()
 
         all_courses = await self.database.select_all_courses()
+
         if all_courses:
             await state.update_data(all_courses=all_courses)
+
             kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
             await message.answer("Выберите курс", reply_markup=kb)
+
         else:
+            logger.warning("Нет доступных курсов")
+
             await message.answer("Нет доступных курсов...")

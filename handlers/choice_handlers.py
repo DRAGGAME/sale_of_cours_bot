@@ -10,17 +10,21 @@ from keyboards.menu_fabric import FabricInline, ChoiceCourse
 
 
 class ChoiceHandlers:
+    """
+    Класс для выбора курса
+    """
     def __init__(self):
         self.bot = bot
         self.router_choice = Router()
 
-        self.database = UserOperation()       # пул уже есть
+        self.database = UserOperation()
         self.admin_database = AdminOperation()
+
         self.choice_fabric_keyboard = FabricInline()
 
-        self.register_handlers()
+        self.register_choice_handlers()
 
-    def register_handlers(self):
+    def register_choice_handlers(self):
         self.router_choice.callback_query.register(self.choice_course, ChoiceCourse.filter(F.number_course_id != None))
         self.router_choice.callback_query.register(self.choice_page, ChoiceCourse.filter(F.action != None))
 

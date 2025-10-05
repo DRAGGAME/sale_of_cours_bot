@@ -372,7 +372,7 @@ class AdminHandlers:
             if password:
 
                 await message.delete()
-                await self.admin_database.update_admin_password(str(message.chat.id))
+                await self.admin_database.update_admin_password()
                 admin_keyboard = await self.admin_fabric_inline.main_menu_admin()
 
                 msg_bot_two = await message.answer(

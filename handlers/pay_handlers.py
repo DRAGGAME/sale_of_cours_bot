@@ -1,4 +1,5 @@
 from aiogram import Router, F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, LabeledPrice, Message, PreCheckoutQuery
@@ -7,9 +8,13 @@ from config import bot, PROVIDER_TOKEN
 from database.admin_operations import AdminOperation
 from keyboards.menu_fabric import FabricInline
 from keyboards.menu_fabric import PayCourse
+from logger import logger
 
 
 class PayHandlers:
+    """
+    Класс для работ с оплатой
+    """
     def __init__(self):
         self.bot = bot
         self.router_pay = Router()
@@ -27,8 +32,6 @@ class PayHandlers:
 
     async def pay_course(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
         data_course = await state.get_value('data_course')
-        print(data_course)
-        print(type(data_course[-3]))
         keyboard_payment = await self.pay_fabric_kb.payment_create_kb(data_course[-4])
 
         prices = [LabeledPrice(label='Оплата товара', amount=(data_course[2]*100))]
@@ -42,7 +45,7 @@ class PayHandlers:
             prices=prices,
             reply_markup=keyboard_payment
         )
-        await state.update_data(msg_price=msg, id_channel=data_course[-2])
+        await state.update_data(msg_price=msg, id_channel=data_course[-3])
 
         await callback.answer()
 
@@ -52,17 +55,24 @@ class PayHandlers:
     async def successfall_paymant(self, message: Message, state: FSMContext):
         msg_price: Message = await state.get_value('msg_price')
         channel_id = await state.get_value('id_channel')
+        link = None
 
         await msg_price.delete()
         await self.admin_database.insert_new_transaction(str(message.chat.id),
                                                          message.successful_payment.invoice_payload.title(),
                                                          message.successful_payment.telegram_payment_charge_id,
                                                          message.successful_payment.total_amount)
-        link = await bot.create_chat_invite_link(channel_id, member_limit=1)
-        url_link = getattr(link, 'invite_link')
 
-        await message.reply(f"Платеж на сумму {message.successful_payment.total_amount // 100} "
-                            f"{message.successful_payment.currency} прошел успешно\n\nВот ваша ссылка на курс: {url_link}")
+        try:
+            link = await bot.create_chat_invite_link(channel_id, member_limit=1)
+
+            url_link = getattr(link, 'invite_link')
+            await message.reply(f"Платеж на сумму {message.successful_payment.total_amount // 100} "
+                                f"{message.successful_payment.currency} прошел успешно\n\nВот ваша ссылка на курс: {url_link}")
+        except TelegramBadRequest:
+            await message.reply("Произошла ошибка платежа")
+            logger.error(f"Видимо, айди канала {channel_id} - не существует")
+
 
     async def cancel_paymant(self, callback: CallbackQuery):
         await callback.message.delete()
