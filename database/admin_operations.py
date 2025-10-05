@@ -49,13 +49,13 @@ class AdminOperation(UserOperation):
                                         """, (password, ))
         return password
 
-    async def update_admin_password(self) -> None:
+    async def update_admin_password(self, admin_chat_id: str) -> None:
         """
         Изменение пароля админа на None
         :param admin_chat_id:
         :return:
         """
-        await self.execute_query("""UPDATE settings_table SET password_admin=$1""", (None, ))
+        await self.execute_query("""UPDATE settings_table SET (password_admin, admin_chat_id)=($1, $2) """, (None, admin_chat_id))
 
     async def insert_new_course(self, name: str, description: str, price: int, channel_id: str) -> None:
         """

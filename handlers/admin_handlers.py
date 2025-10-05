@@ -296,9 +296,6 @@ class AdminHandlers:
         else:
             msg = await callback.message.answer("В течение недели не было продано ни единого курса",
                                                 reply_markup=back_panel)
-        await callback.message.delete()
-        await asyncio.sleep(120)
-        await msg.delete()
 
     async def update_politics(self, callback: CallbackQuery, state: FSMContext):
         keyboard = await self.admin_fabric_inline.politics_keyboard()
@@ -308,17 +305,14 @@ class AdminHandlers:
         msg_politic = ''
 
         type_politics = callback_data.type_politics
-        print(type_politics)
         keyboard_in_main = await self.admin_fabric_inline.politics_keyboard()
 
         try:
             if type_politics == "kond":
-                print("TEST 1")
                 await state.set_state(SetupPolitics.kond)
                 msg_politic = await callback.message.edit_text("Отправьте ссылку на политику кондфиденциальности",
                                                                reply_markup=keyboard_in_main)
             else:
-                print("TEST 2")
 
                 await state.set_state(SetupPolitics.user)
                 msg_politic = await callback.message.edit_text("Отправьте ссылку на пользовательское соглашение",
@@ -336,7 +330,6 @@ class AdminHandlers:
 
         if message.text:
             type_politics = await state.get_value("type_politics")
-            print(type_politics)
             await self.admin_database.update_url_politic(type_politics, message.text)
             await msg_politic.edit_text(
                 f"Вы успешно изменили {'политику кондфиденциальности' if type_politics == 'kond' else 'пользовательское соглашение'}",
@@ -372,7 +365,7 @@ class AdminHandlers:
             if password:
 
                 await message.delete()
-                await self.admin_database.update_admin_password()
+                await self.admin_database.update_admin_password(str(message.chat.id))
                 admin_keyboard = await self.admin_fabric_inline.main_menu_admin()
 
                 msg_bot_two = await message.answer(
