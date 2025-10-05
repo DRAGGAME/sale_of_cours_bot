@@ -36,23 +36,21 @@ class BeginHandler:
         self.router.message.register(
             self.start_handler_nach_pay, CheckSelectUser(self.database), CommandStart())
 
-    async def start_handler(self, message: Message):
-        await bot.unpin_all_chat_messages(message.chat.id)
+    async def start_handler(self, message: Message, state: FSMContext):
         politics = await self.database.select_politics()
         keyboard_start = await self.begin_fabric_keyboard.inline_choice_keyboard()
-
-        msg_pin = await message.answer(
+        await state.clear()
+        await message.delete()
+        await message.answer(
             text=f"Перед тем как воспользоваться ботом, "
                  f"прочтите и примите это: \n"
                  f"1) <a href={politics[-1]}>Политику кондфинициальности</a>\n"
                  f"2) <a href={politics[-2]}>Пользовательское соглашение</a>",
             reply_markup=keyboard_start
         )
-        await bot.pin_chat_message(chat_id=message.chat.id, message_id=msg_pin.message_id)
 
     async def callback_politics_handler(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
         await state.clear()
-        print(callback_data.accept)
         if callback_data.accept:
             try:
                 await self.admin_database.insert_new_user(str(callback.message.chat.id))
@@ -63,11 +61,11 @@ class BeginHandler:
                 await state.update_data(all_courses=all_courses)
                 kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
 
-                msg_pin = await callback.message.edit_text("Выберите курс", reply_markup=kb)
-                await bot.pin_chat_message(chat_id=msg_pin.chat.id, message_id=msg_pin.message_id)
+                await callback.message.edit_text("Выберите курс", reply_markup=kb)
             else:
                 await callback.message.edit_text("Нет доступных курсов...")
         else:
+
             await callback.message.edit_text("Вы отказались\nДальнейшее пользование ботом невозможно")
             await asyncio.sleep(20)
             await callback.message.delete()

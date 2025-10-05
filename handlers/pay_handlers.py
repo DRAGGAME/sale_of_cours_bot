@@ -29,12 +29,12 @@ class PayHandlers:
         data_course = await state.get_value('data_course')
         print(data_course)
         print(type(data_course[-3]))
-        keyboard_payment = await self.pay_fabric_kb.payment_create_kb(data_course[-3])
+        keyboard_payment = await self.pay_fabric_kb.payment_create_kb(data_course[-4])
 
         prices = [LabeledPrice(label='Оплата товара', amount=(data_course[2]*100))]
         msg = await callback.message.answer_invoice(
             title=data_course[1],
-            description=data_course[-1],
+            description=data_course[-2],
             payload=f"{data_course[1]}",
             provider_token=PROVIDER_TOKEN,
             currency="RUB",

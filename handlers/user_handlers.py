@@ -25,7 +25,6 @@ class SetupFSM(StatesGroup):
 @router_for_user.message(Command(commands=["setup", "Setup"]), CheckAdminSetup(sqlbase_for_admin_function))
 
 
-class
 
 async def setup_handler(message: Message, state: FSMContext):
     await sqlbase_for_admin_function.connect()

@@ -6,6 +6,10 @@ from aiogram.types import InlineKeyboardButton
 from keyboards.fabirc_kb import KeyboardFactory
 
 
+class MainMenu(CallbackData, prefix="main_menu"):
+    action: str
+
+
 class StopInline(CallbackData, prefix="stop"):
     action: str
 
@@ -16,9 +20,70 @@ class AdminChoiceCourse(CallbackData, prefix="choice_course_admin"):
     action: Optional[str]
 
 
+class BeginPage(CallbackData, prefix="begin_page"):
+    next_status: Optional[bool]
+    number_course_id: Optional[int]
+    back: bool
+
+
+class UpdatePoliticInline(CallbackData, prefix="update_politic_inline"):
+    type_politics: str
+
+
 class AdminFabric(KeyboardFactory):
     def __init__(self):
+        self.button_in_main = InlineKeyboardButton(
+            text="В главное меню",
+            callback_data=MainMenu(
+                action="main_menu",
+            ).pack()
+        )
+
         super().__init__()
+
+    async def main_menu_admin(self):
+        await self.create_builder_inline()
+        button_add_course = InlineKeyboardButton(
+            text="Добавить курс",
+            callback_data=MainMenu(
+                action="add_course",
+            ).pack()
+        )
+
+        button_status_course = InlineKeyboardButton(
+            text="Все курсы",
+            callback_data=MainMenu(
+                action="status_course",
+            ).pack()
+        )
+
+        button_data_a_course = InlineKeyboardButton(
+            text="Данные по продажам",
+            callback_data=MainMenu(
+                action="data_a_course",
+            ).pack()
+        )
+
+        button_edit_politic = InlineKeyboardButton(
+            text="Изменить политики",
+            callback_data=MainMenu(
+                action="edit_politics",
+            ).pack()
+        )
+
+        button_clear_admin = InlineKeyboardButton(
+            text="Сбросить админские настройки",
+            callback_data=MainMenu(
+                action="clear_settings",
+            ).pack()
+
+        )
+
+        self.builder_inline.row(button_add_course, button_edit_politic)
+        self.builder_inline.row(button_status_course, button_data_a_course)
+        self.builder_inline.row(button_clear_admin)
+
+        return self.builder_inline.as_markup()
 
     async def inline_course_button(self):
         await self.create_builder_inline()
@@ -58,15 +123,9 @@ class AdminFabric(KeyboardFactory):
             ).pack()
         )
 
-        button_stop = InlineKeyboardButton(
-            text="Остановить",
-            callback_data=StopInline(
-                action="stop"
-            ).pack()
-        )
         self.builder_inline.add(button_name, button_description, button_channel, button_price)
         self.builder_inline.row(button_accept)
-        self.builder_inline.row(button_stop)
+        self.builder_inline.row(self.button_in_main)
 
         return self.builder_inline.as_markup()
 
@@ -103,7 +162,59 @@ class AdminFabric(KeyboardFactory):
         )
 
         self.builder_inline.row(back_button, next_button)
+        self.builder_inline.row(self.button_in_main)
         return self.builder_inline.as_markup()
 
-    async def choice_course_admin(self):
+    async def inline_back_keyboard(self, status: bool, id_course: Optional[int]):
         await self.create_builder_inline()
+
+        activate_button = InlineKeyboardButton(
+            text=f"{'Деактивировать' if status else 'Активировать'}",
+            callback_data=BeginPage(
+                next_status=False if status else True,
+                number_course_id=id_course,
+                back=False
+            ).pack()
+        )
+
+        back_button = InlineKeyboardButton(
+            text="Назад",
+            callback_data=BeginPage(
+                next_status=None,
+                number_course_id=None,
+                back=True
+            ).pack()
+        )
+        self.builder_inline.row(activate_button)
+        self.builder_inline.row(back_button)
+
+        return self.builder_inline.as_markup()
+
+    async def politics_keyboard(self):
+        await self.create_builder_inline()
+
+        kond_politic = InlineKeyboardButton(
+            text="Изменить политику кондфинициальности",
+            callback_data=UpdatePoliticInline(
+                type_politics="kond"
+            ).pack()
+        )
+
+        user_politic = InlineKeyboardButton(
+            text="Изменить пользовательское соглашение",
+            callback_data=UpdatePoliticInline(
+                type_politics="user"
+            ).pack()
+        )
+
+        self.builder_inline.add(kond_politic)
+        self.builder_inline.row(user_politic)
+        self.builder_inline.row(self.button_in_main)
+
+        return self.builder_inline.as_markup()
+
+    async def default_back_in_panel(self):
+        await self.create_builder_inline()
+
+        self.builder_inline.row(self.button_in_main)
+        return self.builder_inline.as_markup()

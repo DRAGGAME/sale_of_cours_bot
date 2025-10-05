@@ -1,18 +1,19 @@
 import asyncio
-from typing import Awaitable
+from typing import Union
 
 from aiogram import Router, F
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.filters import Command
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
-from aiogram.filters import Command
 from asyncpg import UniqueViolationError, DataError
 
 from config import bot
 from database.admin_operations import AdminOperation
 from filters.check_admin import CheckAdmin
-from keyboards.admin_fabric import AdminFabric, StopInline
+from keyboards.admin_fabric import AdminFabric, StopInline, AdminChoiceCourse, BeginPage, MainMenu, UpdatePoliticInline
 
 
 class SetupStates(StatesGroup):
@@ -22,8 +23,14 @@ class SetupStates(StatesGroup):
     channel = State()
     none_state = State()
 
+
 class SetupFSM(StatesGroup):
     setup_password = State()
+
+
+class SetupPolitics(SetupStates):
+    kond = State()
+    user = State()
 
 
 class AdminHandlers:
@@ -33,81 +40,69 @@ class AdminHandlers:
 
         self.router = Router()
         self.admin_database = AdminOperation()
-        self.begin_fabric_keyboard = AdminFabric()
+        self.admin_fabric_inline = AdminFabric()
 
         self.register_handlers_is_admin()
 
     def register_handlers_is_admin(self):
+
+        self.router.message.register(self.admin_call, Command(commands=["admin", "Admin"]),
+                                     CheckAdmin(self.admin_database))
+        self.router.callback_query.register(self.back_panel_handler, MainMenu.filter(F.action == "main_menu"))
+
         self.router.channel_post.register(self.chat_id_handler, Command("chat_id"))
 
         self.router.message.register(self.setup_handler, Command("setup"))
         self.router.message.register(self.setup_from_password_handler, SetupFSM.setup_password)
 
-        self.router.message.register(self.add_new_course, Command("add_channel"), CheckAdmin(self.admin_database))
-
+        self.router.callback_query.register(self.add_new_course, MainMenu.filter(F.action == "add_course"))
         self.router.callback_query.register(self.edit_course, StopInline.filter(F.action), SetupStates.none_state)
-
         self.router.message.register(self.edit_komponent_course, F, SetupStates.name)
         self.router.message.register(self.edit_komponent_course, F, SetupStates.description)
         self.router.message.register(self.edit_komponent_course, F, SetupStates.price)
         self.router.message.register(self.edit_komponent_course, F, SetupStates.channel)
 
+        self.router.callback_query.register(self.deactivate_course, MainMenu.filter(F.action == "status_course"))
+        self.router.callback_query.register(self.deactivate_course, BeginPage.filter(F.back == True))
+        self.router.callback_query.register(self.action_course, AdminChoiceCourse.filter(F.number_course_id != None))
+        self.router.callback_query.register(self.choice_page_admin, AdminChoiceCourse.filter(F.action != None))
+        self.router.callback_query.register(self.end_activate_or_deactivate,
+                                            BeginPage.filter(F.number_course_id != None))
 
+        self.router.callback_query.register(self.data_a_pay_course, MainMenu.filter(F.action == "data_a_course"))
 
+        self.router.callback_query.register(self.update_politics, MainMenu.filter(F.action == "edit_politics"))
+        self.router.callback_query.register(self.update_politics_two, UpdatePoliticInline.filter(F.type_politics))
 
-    async def setup_handler(self, message: Message, state: FSMContext):
-        password = await self.admin_database.select_password_and_user()
+        self.router.message.register(self.update_politics_three, SetupPolitics.user, F)
+        self.router.message.register(self.update_politics_three, SetupPolitics.kond, F)
+
+        self.router.callback_query.register(self.create_profile_callback, MainMenu.filter(F.action == "clear_settings"))
+
+    async def admin_call(self, message: Message, state: FSMContext):
         await state.clear()
-
-        if password:
-            await state.set_state(SetupFSM.setup_password)
-
-            await message.delete()
-
-            bot_msg = await message.answer(
-                "Войдите для начала работы.\nP.S Пароль единоразовый для одного аккаунта\nВведите пароль:")
-
-            await state.update_data(bot_msg=bot_msg.message_id)
-        else:
-            bot_msg = await message.answer(
-                "Пароля - не существует, видимо, администратор уже существует\nВведите команду и пароль заново")
-
-            await state.update_data(bot_msg=bot_msg.message_id)
-
-    async def setup_from_password_handler(self, message: Message, state: FSMContext):
-        msg_id = await state.get_value("bot_msg")
-        if message.text:
-            password = await self.admin_database.select_password_try(message.text)
-
-            if password:
-
-                await message.delete()
-                await self.admin_database.update_admin_password(str(message.chat.id))
-
-                msg_bot_two = await message.answer(
-                    "Пароль - верный, вы зарегистрированы. Пароль - теперь недействителен\n\n"
-                    "Введите /add_channel")
-            else:
-                msg_bot_two = await message.answer("Пароль - неверный\nВведите команду и пароль заново")
-        else:
-            msg_bot_two = await message.answer("Это сообщение не текст\nВведите команду и пароль заново")
-
-        await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_id))
-        await state.clear()
-        await asyncio.sleep(30)
-        await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_bot_two.message_id))
-
-    async def add_new_course(self, message: Message, state: FSMContext):
-        keyboard = await self.begin_fabric_keyboard.inline_course_button()
+        admin_keyboard = await self.admin_fabric_inline.main_menu_admin()
         await message.delete()
+        await message.answer("Приветсвую вас в админ-панели\n\n"
+                             "Что вы хотите сделать?", reply_markup=admin_keyboard)
+
+    async def back_panel_handler(self, callback: CallbackQuery, state: FSMContext):
+        await state.clear()
+        admin_keyboard = await self.admin_fabric_inline.main_menu_admin()
+        await callback.message.edit_text("Все параметры сброшены.\n\n"
+                                         "Что вы хотите сделать?", reply_markup=admin_keyboard)
+
+    async def add_new_course(self, callback: CallbackQuery, state: FSMContext):
+        keyboard = await self.admin_fabric_inline.inline_course_button()
+        await callback.message.delete()
         await state.set_state(SetupStates.none_state)
-        await message.answer("Перед тем, как добавить курс. Заполните все данные по анкете ниже\n"
-                                   "<pre>"
-                                   f"Имя: нет\n"
-                                   f"Описание: нет\n"
-                                   f"Цена: нет\n"
-                                   f"Айди канала: нет"
-                                   "</pre>", reply_markup=keyboard)
+        await callback.message.answer("Перед тем, как добавить курс. Заполните все данные по анкете ниже\n"
+                                      "<pre>"
+                                      f"Имя: нет\n"
+                                      f"Описание: нет\n"
+                                      f"Цена: нет\n"
+                                      f"Айди канала: нет"
+                                      "</pre>", reply_markup=keyboard)
 
     async def edit_course(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
         msg_add_course = None
@@ -152,22 +147,38 @@ class AdminHandlers:
                                 return
 
                             await self.admin_database.insert_new_course(name, description, int(price), channel_id)
+                            back_panel = await self.admin_fabric_inline.default_back_in_panel()
+                            await callback.message.edit_text("Курс создан с парметрами"
+                                                             "<pre>"
+                                                             f"Имя: {name}\n"
+                                                             f"Описание: {description}\n"
+                                                             f"Цена: {price}\n"
+                                                             f"Айди канала: {channel_id}"
+                                                             "</pre>", reply_markup=back_panel)
 
+                            await asyncio.sleep(60)
                             await callback.message.delete()
+
                             return
+
                         except DataError:
                             await callback.answer("Цена курса слишком большая", show_alert=True)
                     except UniqueViolationError:
                         await callback.answer("Курс с таким именем уже существует", show_alert=True)
                 except KeyError:
                     await callback.answer("Вы ввели не все данные", show_alert=True)
+            case "stop":
+                await state.clear()
+                await callback.answer("Вы остановили создание нового курса", show_alert=True)
+                return
+
             case _:
-                msg_add_course = await callback.answer("Ошибка")
+                msg_add_course = await callback.answer("Ошибка", show_alert=True)
         await state.update_data(msg_add_course=msg_add_course)
 
         await callback.answer()
 
-    async def edit_komponent_course(self, message: Message,  state: FSMContext):
+    async def edit_komponent_course(self, message: Message, state: FSMContext):
 
         msg = None
 
@@ -191,14 +202,13 @@ class AdminHandlers:
             elif last_state == SetupStates.channel:
                 await state.update_data(course_channel=message.text)
 
-
             name = await state.get_value("course_name")
             description = await state.get_value("course_description")
             price = await state.get_value("course_price")
             channel_id = await state.get_value("course_channel")
 
             await state.set_state(SetupStates.none_state)
-            keyboard = await self.begin_fabric_keyboard.inline_course_button()
+            keyboard = await self.admin_fabric_inline.inline_course_button()
             await message.delete()
             await msg_add_course.edit_text("Перед тем, как добавить курс. Заполните все данные по анкете ниже\n"
                                            "<pre>"
@@ -207,16 +217,192 @@ class AdminHandlers:
                                            f"Цена: {price if price else "нет"}\n"
                                            f"Айди канала: {channel_id if channel_id else "нет"}"
                                            "</pre>",
-                                            reply_markup=keyboard)
+                                           reply_markup=keyboard)
             if msg:
                 await asyncio.sleep(10)
                 await msg.delete()
 
-    async def deactivare_course(self, message: Message,):
+    async def deactivate_course(self, callback: CallbackQuery, state: FSMContext) -> None:
+        data_courses = await self.admin_database.select_all_f_and_t_courses()
+        await state.update_data(data_courses=data_courses)
+        if data_courses:
+            keyboard = await self.admin_fabric_inline.inline_activate_or_deac_course(data_courses, page=0)
+            await callback.message.edit_text("Нажмите 1 раз для подробностей о курсе, "
+                                             "второй раз для деактивации или активации курса",
+                                             reply_markup=keyboard)
+        else:
+            await callback.message.edit_text(
+                "Похоже, у вас нет курсов. Добавьте их командой /add_channel")
+
+    async def action_course(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+        number_course_id: int = callback_data.number_course_id
+        course = await self.admin_database.select_course(int(number_course_id))
+
+        await state.update_data(data_course=tuple(course))
+        keyboard_back = await self.admin_fabric_inline.inline_back_keyboard(course[-1], course[0])
+        await callback.message.edit_text(f"<pre>"
+                                         f"Название курса: {course[1]}"
+                                         f"\nОписание курса: {course[-2]}"
+                                         f"\nЦена курса: {course[-4]}"
+                                         f"\nАктивирован: {'да' if course[-1] else 'нет'}"
+                                         f"</pre>", reply_markup=keyboard_back)
+        await callback.answer()
+
+    async def choice_page_admin(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+        page = callback_data.page
+        action = callback_data.action
+        all_courses = await state.get_value("data_courses")
+        if action == "next" and page < len(all_courses) - 1:
+            page += 1
+        elif action == "back" and page > 0:
+            page -= 1
+        else:
+            await callback.answer("Дальше курсов нет", show_alert=True)
+            return
+
+        kb = await self.admin_fabric_inline.inline_activate_or_deac_course(all_courses, page)
+
+        await callback.message.edit_text("Выберите курс", reply_markup=kb)
+        await callback.answer()
+
+    async def end_activate_or_deactivate(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+        next_status = callback_data.next_status
+        id_course = callback_data.number_course_id
+
+        text = callback.message.text
+        end_text_status = text.split(sep="\n")[-1].split(sep=":")[1].replace(" ", "")
+
+        if end_text_status == "нет":
+            end_text_status_new = "да"
+        else:
+            end_text_status_new = "нет"
+
+        form_string = f"Активирован: {end_text_status_new}"
+        new_text = text.replace(f"Активирован: {end_text_status}", form_string)
+
+        await self.admin_database.update_status(id_course, next_status)
+        keyboard = await self.admin_fabric_inline.inline_back_keyboard(status=next_status, id_course=id_course)
+        await state.clear()
+        await callback.message.edit_text(f"<pre>{new_text}</pre>", reply_markup=keyboard)
+        await callback.answer()
+
+    async def data_a_pay_course(self, callback: CallbackQuery):
+        data = await self.admin_database.check_count_courses()
+        back_panel = await self.admin_fabric_inline.default_back_in_panel()
+        if data[1]:
+            msg = await callback.message.answer(f"Сколько купили курсов за неделю: {data[0]}"
+                                                f"\nСколько вы заработали без вычетов каких-либо процентов: {data[1]}",
+                                                reply_markup=back_panel)
+        else:
+            msg = await callback.message.answer("В течение недели не было продано ни единого курса",
+                                                reply_markup=back_panel)
+        await callback.message.delete()
+        await asyncio.sleep(120)
+        await msg.delete()
+
+    async def update_politics(self, callback: CallbackQuery, state: FSMContext):
+        keyboard = await self.admin_fabric_inline.politics_keyboard()
+        await callback.message.edit_text("Какую политику вы хотели бы изменить?", reply_markup=keyboard)
+
+    async def update_politics_two(self, callback: CallbackQuery, callback_data: CallbackData,state: FSMContext):
+        msg_politic = ''
+
+        type_politics = callback_data.type_politics
+        print(type_politics)
+        keyboard_in_main = await self.admin_fabric_inline.politics_keyboard()
+
+        try:
+            if type_politics == "kond":
+                print("TEST 1")
+                await state.set_state(SetupPolitics.kond)
+                msg_politic = await callback.message.edit_text("Отправьте ссылку на политику кондфиденциальности",
+                                                               reply_markup=keyboard_in_main)
+            else:
+                print("TEST 2")
+
+                await state.set_state(SetupPolitics.user)
+                msg_politic = await callback.message.edit_text("Отправьте ссылку на пользовательское соглашение",
+                                                               reply_markup=keyboard_in_main)
+            await state.update_data(msg_politic=msg_politic, type_politics=type_politics)
+            await callback.answer()
+        except TelegramBadRequest:
+            await callback.answer("Введите url политики или соглашения", show_alert=True)
+
+    async def update_politics_three(self, message: Message, state: FSMContext):
+        await message.delete()
+        msg_politic = await state.get_value("msg_politic")
+        keyboard_in_main = await self.admin_fabric_inline.politics_keyboard()
+
+
+        if message.text:
+            type_politics = await state.get_value("type_politics")
+            print(type_politics)
+            await self.admin_database.update_url_politic(type_politics, message.text)
+            await msg_politic.edit_text(
+                f"Вы успешно изменили {'политику кондфиденциальности' if type_politics == 'kond' else 'пользовательское соглашение'}",
+                reply_markup=keyboard_in_main)
+            await state.clear()
+        else:
+            await msg_politic.answer("Ваше сообщение - не текст.\nВведите текст", show_alert=True)
+
+    async def setup_handler(self, message: Message, state: FSMContext):
+        password = await self.admin_database.select_password_and_user()
+        await state.clear()
+
+        if password:
+            await state.set_state(SetupFSM.setup_password)
+
+            await message.delete()
+
+            bot_msg = await message.answer(
+                "Войдите для начала работы.\nP.S Пароль единоразовый для одного аккаунта\nВведите пароль:")
+
+            await state.update_data(bot_msg=bot_msg.message_id)
+        else:
+            bot_msg = await message.answer(
+                "Пароля - не существует, видимо, администратор уже существует\nВведите команду и пароль заново")
+
+            await state.update_data(bot_msg=bot_msg.message_id)
+
+    async def setup_from_password_handler(self, message: Message, state: FSMContext):
+        msg_id = await state.get_value("bot_msg")
+        if message.text:
+            password = await self.admin_database.select_password_try(message.text)
+
+            if password:
+
+                await message.delete()
+                await self.admin_database.update_admin_password(str(message.chat.id))
+                admin_keyboard = await self.admin_fabric_inline.main_menu_admin()
+
+                msg_bot_two = await message.answer(
+                    "Пароль - верный, вы зарегистрированы. Пароль - теперь недействителен\n\nЧто вы хотите сделать",
+                    reply_markup=admin_keyboard)
+
+            else:
+                msg_bot_two = await message.answer("Пароль - неверный\nВведите команду и пароль заново")
+        else:
+            msg_bot_two = await message.answer("Это сообщение не текст\nВведите команду и пароль заново")
+
+        await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_id))
+        await state.clear()
+        await asyncio.sleep(30)
+        await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_bot_two.message_id))
 
     async def chat_id_handler(self, message: Message):
         await message.delete()
-        msg = await message.answer(f"Айди чата: <pre>{message.chat.id}</pre>\n\n"
-                             f"У вас минута на копирование")
+        msg = await message.answer(f"Айди чата: <code>{message.chat.id}</code>\n\n"
+                                   f"У вас минута на копирование")
         await asyncio.sleep(60)
         await msg.delete()
+
+    async def create_profile_callback(self, callback: CallbackQuery):
+        from database.create_table import CreateTable
+        sqlbase_table = CreateTable()
+
+        await sqlbase_table.delete_settings_table_table()
+        await sqlbase_table.create_settings_table()
+
+        await callback.message.edit_text("Данные администратора сброшены. Введите /setup для начала регистрации", show_alert=True)
+        await asyncio.sleep(20)
+        await callback.message.delete()

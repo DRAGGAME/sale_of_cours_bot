@@ -52,7 +52,5 @@ class CreateTable(Sqlbase):
             await self.execute_query("""INSERT INTO settings_table (password_admin)
                                         VALUES (crypt($1, gen_salt('bf')));""", ("a894KdsAt3st_3Mv#_0#",))
 
-    async def delete_all_table(self):
-        await self.execute_query("""DROP TABLE IF EXISTS all_transaction;""")
-        await self.execute_query("""DROP TABLE IF EXISTS settings_table;""")
-        await self.execute_query("""DROP TABLE IF EXISTS profiles;""")
+    async def delete_settings_table_table(self):
+        await self.execute_query("""DROP TABLE IF EXISTS public.settings_table CASCADE;""")
