@@ -290,11 +290,11 @@ class AdminHandlers:
         data = await self.admin_database.check_count_courses()
         back_panel = await self.admin_fabric_inline.default_back_in_panel()
         if data[1]:
-            msg = await callback.message.answer(f"Сколько купили курсов за неделю: {data[0]}"
+            await callback.message.answer(f"Сколько купили курсов за неделю: {data[0]}"
                                                 f"\nСколько вы заработали без вычетов каких-либо процентов: {data[1]}",
                                                 reply_markup=back_panel)
         else:
-            msg = await callback.message.answer("В течение недели не было продано ни единого курса",
+            await callback.message.answer("В течение недели не было продано ни единого курса",
                                                 reply_markup=back_panel)
 
     async def update_politics(self, callback: CallbackQuery, state: FSMContext):
@@ -359,6 +359,8 @@ class AdminHandlers:
 
     async def setup_from_password_handler(self, message: Message, state: FSMContext):
         msg_id = await state.get_value("bot_msg")
+        await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_id))
+
         if message.text:
             password = await self.admin_database.select_password_try(message.text)
 
@@ -371,13 +373,13 @@ class AdminHandlers:
                 msg_bot_two = await message.answer(
                     "Пароль - верный, вы зарегистрированы. Пароль - теперь недействителен\n\nЧто вы хотите сделать",
                     reply_markup=admin_keyboard)
+                return
 
             else:
                 msg_bot_two = await message.answer("Пароль - неверный\nВведите команду и пароль заново")
         else:
             msg_bot_two = await message.answer("Это сообщение не текст\nВведите команду и пароль заново")
 
-        await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_id))
         await state.clear()
         await asyncio.sleep(30)
         await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_bot_two.message_id))
