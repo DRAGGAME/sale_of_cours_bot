@@ -287,16 +287,18 @@ class AdminHandlers:
         data = await self.admin_database.check_count_courses()
         back_panel = await self.admin_fabric_inline.default_back_in_panel()
         if data[1]:
-            await callback.message.answer(f"Сколько купили курсов за неделю: {data[0]}"
+            await callback.message.edit_text(f"Сколько купили курсов за неделю: {data[0]}"
                                                 f"\nСколько вы заработали без вычетов каких-либо процентов: {data[1]}",
                                                 reply_markup=back_panel)
         else:
-            await callback.message.answer("В течение недели не было продано ни единого курса",
+            await callback.message.edit_text("В течение недели не было продано ни единого курса",
                                                 reply_markup=back_panel)
 
     async def update_politics(self, callback: CallbackQuery, state: FSMContext):
         keyboard = await self.admin_fabric_inline.politics_keyboard()
         await callback.message.edit_text("Какую политику вы хотели бы изменить?", reply_markup=keyboard)
+
+        await callback.answer()
 
     async def update_politics_two(self, callback: CallbackQuery, callback_data: CallbackData,state: FSMContext):
         msg_politic = ''
