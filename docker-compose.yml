@@ -1,13 +1,13 @@
 services:
   db:
-    image: postgres:17
-    container_name: postgres_container
+    image: postgres:18
+    container_name: postgres_18_sale
 
     hostname: postgres
     environment:
       POSTGRES_USER: ${user}
       POSTGRES_PASSWORD: ${password}
-      POSTGRES_DB: ${database}
+      POSTGRES_DB: ${DATABASE}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
@@ -39,12 +39,12 @@ services:
     tty: true
     stdin_open: true
 
-  tg_gift:
+  tg_sale_of_course:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      - ip=postgres
+      - ip=postgres_18_sale
       - DATABASE_PORT=5432
       - user=${user}
       - password=${password}

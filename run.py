@@ -1,4 +1,3 @@
-# run.py
 import asyncio
 import logging
 
