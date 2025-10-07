@@ -228,8 +228,9 @@ class AdminHandlers:
                                              "второй раз для деактивации или активации курса",
                                              reply_markup=keyboard)
         else:
+            kb_main = await self.admin_fabric_inline.main_menu_admin()
             await callback.message.edit_text(
-                "Похоже, у вас нет курсов. Добавьте их командой /add_channel")
+                "Похоже, у вас нет курсов. Добавьте их в главном меню", reply_markup=kb_main)
 
     async def action_course(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
         number_course_id: int = callback_data.number_course_id
