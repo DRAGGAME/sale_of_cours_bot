@@ -5,16 +5,16 @@ services:
     image: postgres:18
     container_name: postgres_sale_of_cours
 
-    hostname: postgres
+    hostname: postgres_sale_of_cours
     environment:
       POSTGRES_USER: ${user}
       POSTGRES_PASSWORD: ${password}
       POSTGRES_DB: ${DATABASE}
-      PGDATA: /var/lib/postgresql/data/pgdata
+      PGDATA: /var/lib/postgresql/pgdata
     ports:
-      - "5432:5432"  
+      - "5432x:5432"  
     volumes:
-      - ./pgdata:/var/lib/postgresql/data/pgdata
+      - ./pgdata:/var/lib/postgresql/pgdata
     deploy:
       resources:
         limits:
@@ -41,13 +41,13 @@ services:
     tty: true
     stdin_open: true
 
-  ns_overlay_discord:
+  tg_sale_of_course:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      - ip=postgres
-      - DATABASE_PORT=5432     
+      - ip=postgres_sale_of_cours
+      - DATABASE_PORT=5432    
       - user=${user}
       - password=${password}
       - DATABASE=${DATABASE}
