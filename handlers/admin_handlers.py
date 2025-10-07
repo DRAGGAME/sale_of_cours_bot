@@ -94,9 +94,8 @@ class AdminHandlers:
 
     async def add_new_course(self, callback: CallbackQuery, state: FSMContext):
         keyboard = await self.admin_fabric_inline.inline_course_button()
-        await callback.message.delete()
         await state.set_state(SetupStates.none_state)
-        await callback.message.answer("Перед тем, как добавить курс. Заполните все данные по анкете ниже\n"
+        await callback.message.edit_text("Перед тем, как добавить курс. Заполните все данные по анкете ниже\n"
                                       "<pre>"
                                       f"Имя: нет\n"
                                       f"Описание: нет\n"
@@ -156,8 +155,6 @@ class AdminHandlers:
                                                              f"Айди канала: {channel_id}"
                                                              "</pre>", reply_markup=back_panel)
 
-                            await asyncio.sleep(60)
-                            await callback.message.delete()
 
                             return
 
@@ -373,16 +370,23 @@ class AdminHandlers:
                 msg_bot_two = await message.answer(
                     "Пароль - верный, вы зарегистрированы. Пароль - теперь недействителен\n\nЧто вы хотите сделать",
                     reply_markup=admin_keyboard)
+                await state.clear()
+
                 return
 
             else:
                 msg_bot_two = await message.answer("Пароль - неверный\nВведите команду и пароль заново")
+                await state.clear()
+
+                await asyncio.sleep(30)
+                await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_bot_two.message_id))
         else:
             msg_bot_two = await message.answer("Это сообщение не текст\nВведите команду и пароль заново")
+            await state.clear()
 
-        await state.clear()
-        await asyncio.sleep(30)
-        await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_bot_two.message_id))
+            await asyncio.sleep(30)
+            await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_bot_two.message_id))
+
 
     async def chat_id_handler(self, message: Message):
         await message.delete()
