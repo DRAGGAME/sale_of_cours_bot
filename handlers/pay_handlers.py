@@ -37,7 +37,7 @@ class PayHandlers:
         prices = [LabeledPrice(label='Оплата товара', amount=(data_course[2]*100))]
         msg = await callback.message.answer_invoice(
             title=data_course[1],
-            description=data_course[-2],
+            description=f"Оплата курса {data_course[1] if len(data_course[1]) else ""}",
             payload=f"{data_course[1]}",
             provider_token=PROVIDER_TOKEN,
             currency="RUB",

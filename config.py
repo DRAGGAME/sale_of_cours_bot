@@ -16,3 +16,4 @@ DATABASE = os.getenv('DATABASE')
 PROVIDER_TOKEN = os.getenv('PROVIDER_TOKEN')
 
 bot = Bot(token=TG_KEY, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
