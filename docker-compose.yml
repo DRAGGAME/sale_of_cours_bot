@@ -2,9 +2,8 @@ version: "3.9"
 
 services:
   db:
-    image: postgres:18
+    image: postgres:16
     container_name: postgres_sale_of_cours
-
     hostname: postgres_sale_of_cours
     environment:
       POSTGRES_USER: ${user}
@@ -15,14 +14,6 @@ services:
       - "5432:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/pgdata
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
     command: >
       postgres
       -c max_connections=10000
@@ -38,32 +29,31 @@ services:
       timeout: 10s
       retries: 5
     restart: unless-stopped
-    tty: true
-    stdin_open: true
     networks:
-      - postgres_network
+      - sale_of_cours_bot_postgres_network
 
   tg_sale_of_course:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: tg_sale_of_course
     environment:
       - ip=postgres_sale_of_cours
-      - DATABASE_PORT=5432    
+      - DATABASE_PORT=5432
       - user=${user}
       - password=${password}
       - DATABASE=${DATABASE}
       - TG_API=${TG_API}
       - PROVIDER_TOKEN=${PROVIDER_TOKEN}
-    networks:
-      - postgres_network
     depends_on:
       - db
+    networks:
+      - sale_of_cours_bot_postgres_network
 
 volumes:
   pgdata:
     driver: local
 
 networks:
-  postgres_network:
+  sale_of_cours_bot_postgres_network:
     driver: bridge
