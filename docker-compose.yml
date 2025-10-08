@@ -40,6 +40,8 @@ services:
     restart: unless-stopped
     tty: true
     stdin_open: true
+    networks:
+      - postgres_network
 
   tg_sale_of_course:
     build:
@@ -53,9 +55,15 @@ services:
       - DATABASE=${DATABASE}
       - TG_API=${TG_API}
       - PROVIDER_TOKEN=${PROVIDER_TOKEN}
+    networks:
+      - postgres_network
     depends_on:
       - db
 
 volumes:
   pgdata:
     driver: local
+
+networks:
+  postgres_network:
+    driver: bridge
