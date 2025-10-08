@@ -36,7 +36,7 @@ class CreateTable(Sqlbase):
                                     name TEXT UNIQUE NOT NULL,
                                     price INTEGER DEFAULT 1000,
                                     channel_id TEXT UNIQUE NOT NULL,
-                                    description VARCHAR(255) NOT NULL,
+                                    description TEXT NOT NULL,
                                     status BOOLEAN DEFAULT TRUE)""")
 
     async def create_transaction_table(self):

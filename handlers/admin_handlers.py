@@ -135,11 +135,6 @@ class AdminHandlers:
                             if len(name) > 55:
                                 await callback.answer("Название слишком большое\nДлинна больше 55", show_alert=True)
                                 return
-
-                            if len(description) > 255:
-                                await callback.answer("Описание слишком большое\nДлинна больше 255", show_alert=True)
-                                return
-
                             if int(price) < 10:
                                 await callback.answer("Курс не может стоить меньше 10 рублей", show_alert=True)
                                 return
