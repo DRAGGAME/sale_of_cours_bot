@@ -34,7 +34,6 @@ class ChoiceHandlers:
 
 
         keyboard_back = await self.choice_fabric_keyboard.inline_pay_keyboard(course[2])
-        await state.update_data(data_course=tuple(course))
 
         await callback.message.edit_text(f"<pre>"
                                              f"Название курса: {course[1]}"
@@ -45,7 +44,8 @@ class ChoiceHandlers:
     async def choice_page(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
         page = callback_data.page
         action = callback_data.action
-        all_courses = await state.get_value("all_courses")
+        all_courses = await self.database.select_all_courses()
+
         if action == "next" and page < len(all_courses)-1 :
             page += 1
         elif action == "back" and page > 0:
