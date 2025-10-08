@@ -31,7 +31,7 @@ class ChoiceHandlers:
     async def choice_course(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
         number_course_id: int = callback_data.number_course_id
         course = await self.database.select_course(int(number_course_id))
-
+        await state.update_data(course=course)
 
         keyboard_back = await self.choice_fabric_keyboard.inline_pay_keyboard(course[2])
 
