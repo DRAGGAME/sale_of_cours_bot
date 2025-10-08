@@ -37,7 +37,6 @@ class AdminHandlers:
 
     def __init__(self):
         self.bot = bot
-
         self.router = Router()
         self.admin_database = AdminOperation()
         self.admin_fabric_inline = AdminFabric()

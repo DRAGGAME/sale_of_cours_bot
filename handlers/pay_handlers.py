@@ -30,7 +30,7 @@ class PayHandlers:
         self.router_pay.message.register(self.successfall_paymant, F.successful_payment)
         self.router_pay.callback_query.register(self.cancel_paymant, PayCourse.filter(F.action=="cancel_payment"))
 
-    async def pay_course(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+    async def pay_course(self, callback: CallbackQuery, state: FSMContext):
         data_course = await state.get_value('data_course')
         keyboard_payment = await self.pay_fabric_kb.payment_create_kb(data_course[-4])
 
