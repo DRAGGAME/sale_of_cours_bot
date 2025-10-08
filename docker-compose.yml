@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   db:
-    image: postgres:16
+    image: postgres:18
     container_name: postgres_sale_of_cours
     hostname: postgres_sale_of_cours
     environment:
