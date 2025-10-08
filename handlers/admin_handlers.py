@@ -189,11 +189,14 @@ class AdminHandlers:
 
             elif last_state == SetupStates.price:
                 try:
-                    await state.update_data(course_price=int(message.text))
+                    price = message.text
+                    price = price.replace(" ", "")
+                    price = price.replace(",", "")
+                    price = price.replace(".", "")
+                    await state.update_data(course_price=int(price))
 
                 except ValueError:
-                    msg = await message.answer("Ваша цена - не число")
-
+                    msg = await msg_add_course.answer("Ваша цена - не число", show_alert=True)
 
             elif last_state == SetupStates.channel:
                 await state.update_data(course_channel=message.text)
