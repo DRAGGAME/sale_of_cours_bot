@@ -61,7 +61,7 @@ class CreateTable(Sqlbase):
         await self.execute_query("""CREATE TABLE IF NOT EXISTS settings_table(
         id SERIAL PRIMARY KEY,
         admin_chat_id TEXT DEFAULT '0',
-        password_admin TEXT ,
+        password_admin TEXT,
         user_politics TEXT DEFAULT '0',
         kond_politics TEXT DEFAULT '0'
         );""")
