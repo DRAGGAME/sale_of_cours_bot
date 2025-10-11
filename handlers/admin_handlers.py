@@ -360,8 +360,8 @@ class AdminHandlers:
 
         if message.text:
             password = await self.admin_database.select_password_try(message.text)
-
-            if password:
+            print(password)
+            if password[0][0]:
 
                 await message.delete()
                 await self.admin_database.update_admin_password(str(message.chat.id))
