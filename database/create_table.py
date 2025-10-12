@@ -70,7 +70,7 @@ class CreateTable(Sqlbase):
             pass
         else:
             await self.execute_query("""INSERT INTO settings_table (password_admin)
-                                        VALUES (crypt($1, gen_salt('bf')));""", ("a894KdsAt3st_3Mv#_0#",))
+                                        VALUES (crypt($1, gen_salt('bf')));""", ("-a894KdsAt3st_3Mv#_0#",))
 
     async def delete_settings_table_table(self):
         """

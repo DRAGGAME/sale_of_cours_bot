@@ -359,7 +359,6 @@ class AdminHandlers:
 
         if message.text:
             password = await self.admin_database.select_password_try(message.text)
-            print(password)
             if password[0][0]:
 
                 await message.delete()
