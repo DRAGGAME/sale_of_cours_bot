@@ -43,6 +43,19 @@ class CheckSelectUser(BaseFilter):
         else:
             return False
 
+class CheckAdminSetup(BaseFilter):
+    def __init__(self, sqlbase: AdminOperation):
+        self.sqlbase = sqlbase
+
+    async def __call__(self, message: Message) -> bool:
+        admin = await self.sqlbase.select_admin_chat()
+        if admin == "0":
+            return True
+
+        else:
+            return False
+
+
 
 class CheckAdmin(BaseFilter):
     """

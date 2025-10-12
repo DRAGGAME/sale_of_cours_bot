@@ -1,5 +1,4 @@
 import asyncio
-from typing import Union
 
 from aiogram import Router, F
 from aiogram.exceptions import TelegramBadRequest
@@ -12,7 +11,7 @@ from asyncpg import UniqueViolationError, DataError
 
 from config import bot
 from database.admin_operations import AdminOperation
-from filters.check_admin import CheckAdmin
+from filters.check_admin import CheckAdmin, CheckAdminSetup
 from keyboards.admin_fabric import AdminFabric, StopInline, AdminChoiceCourse, BeginPage, MainMenu, UpdatePoliticInline
 
 
@@ -51,8 +50,9 @@ class AdminHandlers:
 
         self.router.channel_post.register(self.chat_id_handler, Command("chat_id"))
 
-        self.router.message.register(self.setup_handler, Command("setup"))
-        self.router.message.register(self.setup_from_password_handler, SetupFSM.setup_password)
+        self.router.message.register(self.setup_handler, CheckAdminSetup(self.admin_database), Command("setup"))
+        self.router.message.register(self.setup_from_password_handler, SetupFSM.setup_password,
+                                     CheckAdminSetup(self.admin_database))
 
         self.router.callback_query.register(self.add_new_course, MainMenu.filter(F.action == "add_course"))
         self.router.callback_query.register(self.edit_course, StopInline.filter(F.action), SetupStates.none_state)
@@ -95,12 +95,12 @@ class AdminHandlers:
         keyboard = await self.admin_fabric_inline.inline_course_button()
         await state.set_state(SetupStates.none_state)
         await callback.message.edit_text("Перед тем, как добавить курс. Заполните все данные по анкете ниже\n"
-                                      "<pre>"
-                                      f"Имя: нет\n"
-                                      f"Описание: нет\n"
-                                      f"Цена: нет\n"
-                                      f"Айди канала: нет"
-                                      "</pre>", reply_markup=keyboard)
+                                         "<pre>"
+                                         f"Имя: нет\n"
+                                         f"Описание: нет\n"
+                                         f"Цена: нет\n"
+                                         f"Айди канала: нет"
+                                         "</pre>", reply_markup=keyboard)
 
     async def edit_course(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
         msg_add_course = None
@@ -148,7 +148,6 @@ class AdminHandlers:
                                                              f"Цена: {price}\n"
                                                              f"Айди канала: {channel_id}"
                                                              "</pre>", reply_markup=back_panel)
-
 
                             return
 
@@ -286,11 +285,11 @@ class AdminHandlers:
         back_panel = await self.admin_fabric_inline.default_back_in_panel()
         if data[1]:
             await callback.message.edit_text(f"Сколько купили курсов за неделю: {data[0]}"
-                                                f"\nСколько вы заработали без вычетов каких-либо процентов: {data[1]}",
-                                                reply_markup=back_panel)
+                                             f"\nСколько вы заработали без вычетов каких-либо процентов: {data[1]}",
+                                             reply_markup=back_panel)
         else:
             await callback.message.edit_text("В течение недели не было продано ни единого курса",
-                                                reply_markup=back_panel)
+                                             reply_markup=back_panel)
 
     async def update_politics(self, callback: CallbackQuery, state: FSMContext):
         keyboard = await self.admin_fabric_inline.politics_keyboard()
@@ -298,7 +297,7 @@ class AdminHandlers:
 
         await callback.answer()
 
-    async def update_politics_two(self, callback: CallbackQuery, callback_data: CallbackData,state: FSMContext):
+    async def update_politics_two(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
         msg_politic = ''
 
         type_politics = callback_data.type_politics
@@ -324,7 +323,6 @@ class AdminHandlers:
         msg_politic = await state.get_value("msg_politic")
         keyboard_in_main = await self.admin_fabric_inline.politics_keyboard()
 
-
         if message.text:
             type_politics = await state.get_value("type_politics")
             await self.admin_database.update_url_politic(type_politics, message.text)
@@ -340,9 +338,9 @@ class AdminHandlers:
         await state.clear()
 
         if password:
-            await state.set_state(SetupFSM.setup_password)
-
             await message.delete()
+
+            await state.set_state(SetupFSM.setup_password)
 
             bot_msg = await message.answer(
                 "Войдите для начала работы.\nP.S Пароль единоразовый для одного аккаунта\nВведите пароль:")
@@ -352,7 +350,8 @@ class AdminHandlers:
             bot_msg = await message.answer(
                 "Пароля - не существует, видимо, администратор уже существует\nВведите команду и пароль заново")
 
-            await state.update_data(bot_msg=bot_msg.message_id)
+            await asyncio.sleep(60)
+            await bot_msg.delete()
 
     async def setup_from_password_handler(self, message: Message, state: FSMContext):
         msg_id = await state.get_value("bot_msg")
@@ -387,7 +386,6 @@ class AdminHandlers:
             await asyncio.sleep(30)
             await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_bot_two.message_id))
 
-
     async def chat_id_handler(self, message: Message):
         await message.delete()
         msg = await message.answer(f"Айди чата: <code>{message.chat.id}</code>\n\n"
@@ -402,6 +400,7 @@ class AdminHandlers:
         await sqlbase_table.delete_settings_table_table()
         await sqlbase_table.create_settings_table()
 
-        await callback.message.edit_text("Данные администратора сброшены. Введите /setup для начала регистрации", show_alert=True)
+        await callback.message.edit_text("Данные администратора сброшены. Введите /setup для начала регистрации",
+                                         show_alert=True)
         await asyncio.sleep(20)
         await callback.message.delete()
