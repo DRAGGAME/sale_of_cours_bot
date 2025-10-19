@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List, Tuple, Optional
 import asyncpg
 
 from config import HOST, PASSWORD, DATABASE, USER
@@ -53,4 +53,32 @@ class Sqlbase:
                     return await connection.fetch(query)
         except asyncpg.PostgresError as e:
             print(f"Ошибка выполнения запроса: {e}")
+            raise
+
+    async def execute_transaction(
+            self,
+            queries: List[Tuple[str, Optional[tuple]]]
+    ) -> List[Union[list, None]]:
+        """
+        Выполняет несколько SQL-запросов в рамках одной транзакции.
+        :param queries: список кортежей (sql, params)
+        :return: список результатов выполнения запросов
+        """
+        if not self.pool:
+            raise ValueError("Пул соединений не создан. Убедитесь, что вызвали connect().")
+
+        results = []
+        try:
+            async with self.pool.acquire() as connection:
+                async with connection.transaction():
+                    for query, params in queries:
+                        if params:
+                            result = await connection.fetch(query, *params)
+                        else:
+                            result = await connection.fetch(query)
+                        results.append(result)
+            return results
+
+        except asyncpg.PostgresError as e:
+            print(f"Ошибка выполнения транзакции: {e}")
             raise

@@ -1,29 +1,35 @@
-from typing import Tuple, List
+from typing import Tuple, List, Union, Optional, Any, Coroutine
 
 from database.db import Sqlbase
 
 
 class UserOperation(Sqlbase):
 
-    async def select_all_courses(self) -> List[List]:
+    async def select_main_message(self) -> str:
+
+        main_message = await self.execute_query("""SELECT main_message FROM settings_table;""")
+
+        return main_message[0][0]
+
+    async def select_all_courses(self, main_handlers: bool) -> tuple[list, list | None]:
         """
         Выборка и создание данных по-парно
         :return:
         :rtype: List[List]
+
         """
-        raw_data = await self.execute_query("SELECT * FROM courses WHERE status=True ORDER BY id ASC;")
+        if main_handlers:
+            raw_data, main_message = await self.execute_transaction([("SELECT * FROM courses WHERE status=True ORDER BY id ASC;", None),
+                                            ("SELECT main_message FROM settings_table;", None)])
+            main_message = main_message[0][0]
+
+        else:
+            raw_data = await self.execute_query("SELECT * FROM courses WHERE status=True ORDER BY id ASC;")
+            main_message = None
 
         data_a_courses: list = [raw_data[i:i + 2] for i in range(0, len(raw_data), 2)]
 
-        return data_a_courses
-
-    async def select_politics(self) -> Tuple[str, str]:
-        """
-        Пользовательское соглашение
-        :return:
-        """
-        politics: Tuple[Tuple[str, str]] = await self.execute_query("""SELECT user_politics, kond_politics FROM settings_table;""")
-        return politics[0]
+        return data_a_courses, main_message
 
     async def select_user(self, chat_id: str) -> bool:
         """
