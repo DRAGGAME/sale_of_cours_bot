@@ -50,12 +50,13 @@ services:
       dockerfile: Dockerfile
     container_name: tg_sale_of_course
     environment:
-      - ip=postgres_sale_of_cours
+      - ip_postgres=postgres_sale_of_cours
       - DATABASE_PORT=5432
       - user=${user}
       - password=${password}
       - DATABASE=${DATABASE}
       - TG_API=${TG_API}
+      -
       - PROVIDER_TOKEN=${PROVIDER_TOKEN}
     depends_on:
       - db

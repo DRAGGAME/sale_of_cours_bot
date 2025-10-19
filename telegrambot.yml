@@ -10,6 +10,7 @@ dependencies:
   - python>=3.10.0
   - asyncpg
   - numpy
+  - redis
   - pip:
     - aiogram>=3.5.0
     - python-dotenv

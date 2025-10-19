@@ -1,9 +1,9 @@
 from typing import Union, List, Tuple, Optional
 import asyncpg
 
-from config import HOST, PASSWORD, DATABASE, USER
+from config import HOST_POSTGRES, PASSWORD, DATABASE, USER
 
-pg_host = HOST
+pg_host = HOST_POSTGRES
 pg_user = USER
 pg_password = PASSWORD
 pg_database = DATABASE
