@@ -33,7 +33,7 @@ services:
       - sale_of_cours_bot_postgres_network
 
   redis:
-    image: redis:18.2
+    image: redis:8.2
     restart: unless-stopped
     volumes:
       - ./redis_data:/data
