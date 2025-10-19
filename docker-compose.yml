@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: ${DATABASE}
       PGDATA: /var/lib/postgresql/pgdata
     ports:
-      - "0.0.0.0:5432:5432"
+      - "5432:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/pgdata
     command: >
@@ -34,6 +34,8 @@ services:
 
   redis:
     image: redis:8.2
+    container_name: redis_container
+    hostname: redis_host
     restart: unless-stopped
     volumes:
       - ./redis_data:/data
@@ -56,7 +58,7 @@ services:
       - password=${password}
       - DATABASE=${DATABASE}
 
-      - HOST_REDIS=redis
+      - HOST_REDIS=redis_host
 
       - TG_API=${TG_API}
       - PROVIDER_TOKEN=${PROVIDER_TOKEN}
