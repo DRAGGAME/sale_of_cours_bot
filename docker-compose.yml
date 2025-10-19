@@ -33,14 +33,19 @@ services:
       - sale_of_cours_bot_postgres_network
 
   redis:
-    image: redis:8.2
-    restart: unless-stopped
-    volumes:
-      - ./redis_data:/data
-      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    image: redis:6.2.6-alpine
+    container_name: redis
+    hostname: redis
     ports:
-      - "6379:6379"
-    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+      - "0.0.0.0:6379:6379"
+    volumes:
+      - redis-data:/data
+    environment:
+      REDIS_PASSWORD: ${PASSWORD_REDIS}
+      REDIS_DATABASES: ${REDIS_DATABASES}
+      REDIS_MAXMEMORY: 1.5GB
+      REDIS_APPENDONLY: "yes"
+
     networks:
       - sale_of_cours_bot_postgres_network
 
@@ -50,16 +55,20 @@ services:
       dockerfile: Dockerfile
     container_name: tg_sale_of_course
     environment:
+
       - HOST_POSTGRES=postgres_sale_of_cours
-      - DATABASE_PORT=5432
-      - user=${user}
-      - password=${password}
-      - DATABASE=${DATABASE}
+      - PORT_POSTGRES=5432
+      - USER_POSTGRES=${USER_POSTGRES}
+      - PASSWORD_POSTGRES=${PASSWORD_POSTGRES}
+      - DATABASE_POSTGRES=${DATABASE_POSTGRES}
 
       - HOST_REDIS=redis
+      - PASSWORD_REDIS=${PASSWORD_REDIS}
+      - REDIS_DATABASES=${REDIS_DATABASES}
 
       - TG_API=${TG_API}
       - PROVIDER_TOKEN=${PROVIDER_TOKEN}
+
     depends_on:
       - db
       - redis
@@ -69,8 +78,7 @@ services:
 volumes:
   pgdata:
     driver: local
-
-  redis_data:
+  redis-data:
     driver: local
 
 networks:

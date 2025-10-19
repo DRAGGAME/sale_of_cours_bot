@@ -1,12 +1,12 @@
 from typing import Union, List, Tuple, Optional
 import asyncpg
 
-from config import HOST_POSTGRES, PASSWORD, DATABASE, USER
+from config import HOST_POSTGRES, PASSWORD_POSTGRES, DATABASE_POSTGRES, USER_POSTGRES
 
 pg_host = HOST_POSTGRES
-pg_user = USER
-pg_password = PASSWORD
-pg_database = DATABASE
+pg_user = USER_POSTGRES
+pg_password = PASSWORD_POSTGRES
+pg_database = DATABASE_POSTGRES
 
 _pool: asyncpg.Pool | None = None
 
@@ -25,8 +25,8 @@ class Sqlbase:
         if _pool is None:
             _pool = await asyncpg.create_pool(
                 host=pg_host,
-                user=pg_user,
-                password=pg_password,
+                USER_POSTGRES=pg_user,
+                PASSWORD_POSTGRES=pg_password,
                 database=pg_database,
                 min_size=1,
                 max_size=10_000,

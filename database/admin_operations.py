@@ -38,16 +38,16 @@ class AdminOperation(UserOperation):
                                                      FROM settings_table""")
         return password_admin[0]
 
-    async def select_password_try(self, password: str) -> tuple:
+    async def select_password_try(self, password_admin: str) -> tuple:
         """
         Проверка хэша пароля
-        :param password:
+        :param password_admin:
         :return:
         """
-        password = await self.execute_query("""
+        password_admin = await self.execute_query("""
                                         SELECT password_admin = crypt($1, password_admin) FROM settings_table;
-                                        """, (password, ))
-        return password
+                                        """, (password_admin, ))
+        return password_admin
 
     async def update_admin_password(self, admin_chat_id: str) -> None:
         """

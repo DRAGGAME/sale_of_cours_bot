@@ -20,10 +20,10 @@ class CheckRegistryUser(BaseFilter):
     async def __call__(self, message_or_callback: Union[Message, CallbackQuery]) -> bool:
 
         if isinstance(message_or_callback, Message):
-            user = await self.sqlbase.select_user(str(message_or_callback.chat.id))
+            USER_POSTGRES = await self.sqlbase.select_user(str(message_or_callback.chat.id))
         else:
-            user = await self.sqlbase.select_user(str(message_or_callback.message.chat.id))
-        if not user:
+            USER_POSTGRES = await self.sqlbase.select_user(str(message_or_callback.message.chat.id))
+        if not USER_POSTGRES:
             return True
         else:
             return False
@@ -37,8 +37,8 @@ class CheckSelectUser(BaseFilter):
         self.sqlbase = sqlbase
 
     async def __call__(self, message: Message) -> bool:
-        user = await self.sqlbase.select_user(str(message.chat.id))
-        if user:
+        user_postgres = await self.sqlbase.select_user(str(message.chat.id))
+        if user_postgres:
             return True
         else:
             return False
