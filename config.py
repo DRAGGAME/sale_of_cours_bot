@@ -9,16 +9,17 @@ load_dotenv()
 TG_KEY = os.getenv('TG_API')
 
 HOST_POSTGRES = os.getenv('HOST_POSTGRES')
-USER = os.getenv('user')
-PASSWORD = os.getenv('password')
-DATABASE = os.getenv('DATABASE')
+USER_POSTGRES = os.getenv('USER_POSTGRES')
+PASSWORD_POSTGRES = os.getenv('PASSWORD_POSTGRES')
+DATABASE_POSTGRES = os.getenv('DATABASE_POSTGRES')
 
 HOST_REDIS = os.getenv('HOST_REDIS')
 PASSWORD_REDIS = os.getenv('PASSWORD_REDIS')
+REDIS_DATABASES = os.getenv('REDIS_DATABASES')
+URL_REDIS = f"redis://:{PASSWORD_REDIS}@{HOST_REDIS}:6379/{REDIS_DATABASES}"
 
 PASSWORD_ADMIN = os.getenv('PASSWORD_ADMIN')
 PROVIDER_TOKEN = os.getenv('PROVIDER_TOKEN')
 
-REDIS_URL = f"redis://:{PASSWORD_REDIS}@{HOST_REDIS}:6379/0"
 bot = Bot(token=TG_KEY, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 

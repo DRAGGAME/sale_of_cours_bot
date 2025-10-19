@@ -305,10 +305,10 @@ class AdminHandlers:
 
 
     async def setup_handler(self, message: Message, state: FSMContext):
-        password = await self.admin_database.select_password_and_user()
+        password_admin = await self.admin_database.select_password_and_user()
         await state.clear()
 
-        if password:
+        if password_admin:
             await message.delete()
 
             await state.set_state(SetupFSM.setup_password)
@@ -329,8 +329,8 @@ class AdminHandlers:
         await bot.delete_message(chat_id=message.chat.id, message_id=int(msg_id))
 
         if message.text:
-            password = await self.admin_database.select_password_try(message.text)
-            if password[0][0]:
+            password_admin = await self.admin_database.select_password_try(message.text)
+            if password_admin[0][0]:
 
                 await message.delete()
                 await self.admin_database.update_admin_password(str(message.chat.id))

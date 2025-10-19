@@ -4,7 +4,7 @@ import logging
 from aiogram import Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage
 
-from config import bot, REDIS_URL
+from config import bot, URL_REDIS
 from database.create_table import CreateTable
 from database.db import Sqlbase
 from handlers.admin_handlers import AdminHandlers
@@ -18,8 +18,6 @@ logging.basicConfig(
            '%(lineno)d - %(name)s - %(message)s'
 )
 
-dp = Dispatcher()
-
 
 class TelegramBot:
     """
@@ -27,7 +25,7 @@ class TelegramBot:
     """
     def __init__(self):
         self.bot = bot
-        self.dp = Dispatcher(storage=RedisStorage.from_url(REDIS_URL))
+        self.dp = Dispatcher(storage=RedisStorage.from_url(url=URL_REDIS))
 
         self.admin_handlers = AdminHandlers()
         self.begin_handlers = BeginHandler()
