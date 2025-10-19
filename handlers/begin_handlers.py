@@ -39,31 +39,34 @@ class BeginHandler:
             self.start_handler_nach_pay, CheckSelectUser(self.database), CommandStart())
 
         self.router.callback_query.register(
-            self.callback_politics_handler, ChoiceCallback.filter(F))
-
+            self.callback_start_handler, ChoiceCallback.filter(F))
 
     async def start_handler(self, message: Message, state: FSMContext):
-        """
-        На команду /start
-        :param message:
-        :param state:
-        :return:
-        """
+        try:
+            logger.info("Появился новый пользователь\n"
+                        f"{message.from_user.username}\n"
+                        f"callback_data: {message.chat.id}\n")
+            await self.admin_database.insert_new_user(str(message.chat.id))
+        except UniqueViolationError:
+            pass
 
-        politics = await self.database.select_politics()
-        keyboard_start = await self.begin_fabric_keyboard.inline_choice_keyboard()
+        all_courses, main_message = await self.database.select_all_courses(True)
+
+        if all_courses:
+            if main_message == "0":
+                main_message = "Выберите курс"
+
+            await state.update_data(all_courses=all_courses)
+            kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
+
+            await message.answer(f"{main_message}", reply_markup=kb)
+        else:
+            logger.warning("Нет доступных курсов")
+            await message.answer(f"Нет доступных курсов...\n\nНапишите администратору бота, чтобы добавили курсы")
 
         await state.clear()
-        await message.delete()
-        await message.answer(
-            text=f"Перед тем как воспользоваться ботом, "
-                 f"прочтите и примите это: \n"
-                 f"1) <a href={politics[-1]}>Политику кондфинициальности</a>\n"
-                 f"2) <a href={politics[-2]}>Пользовательское соглашение</a>",
-            reply_markup=keyboard_start
-        )
 
-    async def callback_politics_handler(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+    async def callback_start_handler(self, callback: CallbackQuery, state: FSMContext):
         """
         Тот же start, но для callback
         :param callback:
@@ -72,30 +75,19 @@ class BeginHandler:
         :return:
         """
 
-        if callback_data.accept:
-            try:
-                logger.info("Появился новый пользователь, принявший политики\n"
-                            f"{callback.message.from_user.username}\n"
-                            f"callback_data: {callback.message.chat.id}\n")
-                await self.admin_database.insert_new_user(str(callback.message.chat.id))
-            except UniqueViolationError:
-                pass
-            all_courses = await self.database.select_all_courses()
+        all_courses, main_message = await self.database.select_all_courses(True)
 
-            if all_courses:
+        if all_courses:
+            if main_message == "0":
+                main_message = "Выберите курс"
 
-                await state.update_data(all_courses=all_courses)
-                kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
+            await state.update_data(all_courses=all_courses)
+            kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
 
-                await callback.message.edit_text("Выберите курс", reply_markup=kb)
-            else:
-                logger.warning("Нет доступных курсов")
-                await callback.message.edit_text("Нет доступных курсов...\n\nПропишите /start")
+            await callback.message.edit_text(f"{main_message}", reply_markup=kb)
         else:
-
-            await callback.message.edit_text("Вы отказались\nДальнейшее пользование ботом невозможно")
-            await asyncio.sleep(20)
-            await callback.message.delete()
+            logger.warning("Нет доступных курсов")
+            await callback.message.edit_text("Нет доступных курсов...\n\nНапишите администратору бота, чтобы добавили курсы")
 
         await state.clear()
         await callback.answer()
@@ -103,15 +95,17 @@ class BeginHandler:
     async def start_handler_nach_pay(self, message: Message, state: FSMContext):
         await state.clear()
 
-        all_courses = await self.database.select_all_courses()
+        all_courses, main_message = await self.database.select_all_courses(True)
 
         if all_courses:
-            await state.update_data(all_courses=all_courses)
+            if main_message == "0":
+                main_message = "Выберите курс"
 
+            await state.update_data(all_courses=all_courses)
             kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
-            await message.answer("Выберите курс", reply_markup=kb)
+
+            await message.answer(f"{main_message}", reply_markup=kb)
 
         else:
             logger.warning("Нет доступных курсов")
-
-            await message.answer("Нет доступных курсов...")
+            await message.answer("Нет доступных курсов...\n\nНапишите администратору бота, чтобы добавили курсы")

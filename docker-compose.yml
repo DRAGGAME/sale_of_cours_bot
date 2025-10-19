@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: ${DATABASE}
       PGDATA: /var/lib/postgresql/pgdata
     ports:
-      - "5432:5432"
+      - "0.0.0.0:5432:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/pgdata
     command: >
@@ -32,6 +32,18 @@ services:
     networks:
       - sale_of_cours_bot_postgres_network
 
+  redis:
+    image: redis:18.2
+    restart: unless-stopped
+    volumes:
+      - ./redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    networks:
+      - sale_of_cours_bot_postgres_network
+
   tg_sale_of_course:
     build:
       context: .
@@ -47,11 +59,15 @@ services:
       - PROVIDER_TOKEN=${PROVIDER_TOKEN}
     depends_on:
       - db
+      - redis
     networks:
       - sale_of_cours_bot_postgres_network
 
 volumes:
   pgdata:
+    driver: local
+
+  redis_data:
     driver: local
 
 networks:

@@ -1,5 +1,6 @@
 from asyncpg import DuplicateObjectError
 
+from config import PASSWORD_ADMIN
 from database.db import Sqlbase
 
 
@@ -22,9 +23,7 @@ class CreateTable(Sqlbase):
         """
         await self.execute_query("""CREATE TABLE IF NOT EXISTS user_data (
         id SERIAL PRIMARY KEY,
-        chat_id TEXT UNIQUE NOT NULL,
-        date_accept_politics TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Moscow'),
-        date_accept_user_politics TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Moscow'));""")
+        chat_id TEXT UNIQUE NOT NULL);""")
 
     async def create_course_table(self):
         """
@@ -33,7 +32,7 @@ class CreateTable(Sqlbase):
         """
         await self.execute_query("""CREATE TABLE IF NOT EXISTS courses (
                                     id SERIAL PRIMARY KEY,
-                                    name TEXT UNIQUE NOT NULL,
+                                    name TEXT NOT NULL,
                                     price INTEGER DEFAULT 1000,
                                     channel_id TEXT UNIQUE NOT NULL,
                                     description TEXT NOT NULL,
@@ -62,15 +61,14 @@ class CreateTable(Sqlbase):
         id SERIAL PRIMARY KEY,
         admin_chat_id TEXT DEFAULT '0',
         password_admin TEXT,
-        user_politics TEXT DEFAULT '0',
-        kond_politics TEXT DEFAULT '0'
+        main_message TEXT DEFAULT '0'
         );""")
 
         if await self.execute_query("""SELECT password_admin FROM settings_table LIMIT 1"""):
             pass
         else:
             await self.execute_query("""INSERT INTO settings_table (password_admin)
-                                        VALUES (crypt($1, gen_salt('bf')));""", ("-a894KdsAt3st_3Mv#_0#",))
+                                        VALUES (crypt($1, gen_salt('bf')));""", (PASSWORD_ADMIN, ))
 
     async def delete_settings_table_table(self):
         """

@@ -104,14 +104,10 @@ class AdminOperation(UserOperation):
         """)
         return data[0]
 
-    async def update_url_politic(self, type_politic: str, url_politic: str):
+    async def update_main_message(self, main_message: str):
         """
         Апдейт политик
-        :param type_politic:
-        :param url_politic:
+        :param main_message:
         :return:
         """
-        if type_politic == "kond":
-            await self.execute_query("""UPDATE settings_table SET kond_politics = $1""", (url_politic, ))
-        else:
-            await self.execute_query("""UPDATE settings_table SET user_politics = $1""", (url_politic, ))
+        await self.execute_query("""UPDATE settings_table SET main_message = $1""", (main_message, ))

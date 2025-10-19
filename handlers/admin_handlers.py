@@ -1,7 +1,6 @@
 import asyncio
 
 from aiogram import Router, F
-from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
@@ -27,9 +26,8 @@ class SetupFSM(StatesGroup):
     setup_password = State()
 
 
-class SetupPolitics(SetupStates):
-    kond = State()
-    user = State()
+class SetupMainMessage(SetupStates):
+    edit_main_message = State()
 
 
 class AdminHandlers:
@@ -70,13 +68,10 @@ class AdminHandlers:
 
         self.router.callback_query.register(self.data_a_pay_course, MainMenu.filter(F.action == "data_a_course"))
 
-        self.router.callback_query.register(self.update_politics, MainMenu.filter(F.action == "edit_politics"))
-        self.router.callback_query.register(self.update_politics_two, UpdatePoliticInline.filter(F.type_politics))
+        self.router.callback_query.register(self.main_message_handler, MainMenu.filter(F.action == "edit_main_message"))
+        self.router.message.register(self.edit_main_message, F, SetupMainMessage.edit_main_message)
 
-        self.router.message.register(self.update_politics_three, SetupPolitics.user, F)
-        self.router.message.register(self.update_politics_three, SetupPolitics.kond, F)
-
-        self.router.callback_query.register(self.create_profile_callback, MainMenu.filter(F.action == "clear_settings"))
+        self.router.callback_query.register(self.delete_profile_admin, MainMenu.filter(F.action == "clear_settings"))
 
     async def admin_call(self, message: Message, state: FSMContext):
         await state.clear()
@@ -291,47 +286,23 @@ class AdminHandlers:
             await callback.message.edit_text("В течение недели не было продано ни единого курса",
                                              reply_markup=back_panel)
 
-    async def update_politics(self, callback: CallbackQuery, state: FSMContext):
-        keyboard = await self.admin_fabric_inline.politics_keyboard()
-        await callback.message.edit_text("Какую политику вы хотели бы изменить?", reply_markup=keyboard)
+    async def main_message_handler(self, callback: CallbackQuery, state: FSMContext):
 
+        await state.set_state(SetupMainMessage.edit_main_message)
+        msg_main = await callback.message.edit_text("Введите приветственное сообщение")
+        await state.update_data(msg_main=msg_main)
         await callback.answer()
 
-    async def update_politics_two(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
-        msg_politic = ''
+    async def edit_main_message(self, message: Message, state: FSMContext):
+        msg_main: Message = await state.get_value("msg_main")
+        await self.admin_database.update_main_message(message.text)
+        back_panel = await self.admin_fabric_inline.default_back_in_panel()
 
-        type_politics = callback_data.type_politics
-        keyboard_in_main = await self.admin_fabric_inline.politics_keyboard()
+        await state.clear()
 
-        try:
-            if type_politics == "kond":
-                await state.set_state(SetupPolitics.kond)
-                msg_politic = await callback.message.edit_text("Отправьте ссылку на политику кондфиденциальности",
-                                                               reply_markup=keyboard_in_main)
-            else:
-
-                await state.set_state(SetupPolitics.user)
-                msg_politic = await callback.message.edit_text("Отправьте ссылку на пользовательское соглашение",
-                                                               reply_markup=keyboard_in_main)
-            await state.update_data(msg_politic=msg_politic, type_politics=type_politics)
-            await callback.answer()
-        except TelegramBadRequest:
-            await callback.answer("Введите url политики или соглашения", show_alert=True)
-
-    async def update_politics_three(self, message: Message, state: FSMContext):
         await message.delete()
-        msg_politic = await state.get_value("msg_politic")
-        keyboard_in_main = await self.admin_fabric_inline.politics_keyboard()
+        await msg_main.edit_text(f"Вы успешно изменили приветственное сообщение на: \n\n{message.text}", reply_markup=back_panel)
 
-        if message.text:
-            type_politics = await state.get_value("type_politics")
-            await self.admin_database.update_url_politic(type_politics, message.text)
-            await msg_politic.edit_text(
-                f"Вы успешно изменили {'политику кондфиденциальности' if type_politics == 'kond' else 'пользовательское соглашение'}",
-                reply_markup=keyboard_in_main)
-            await state.clear()
-        else:
-            await msg_politic.answer("Ваше сообщение - не текст.\nВведите текст", show_alert=True)
 
     async def setup_handler(self, message: Message, state: FSMContext):
         password = await self.admin_database.select_password_and_user()
@@ -392,7 +363,7 @@ class AdminHandlers:
         await asyncio.sleep(60)
         await msg.delete()
 
-    async def create_profile_callback(self, callback: CallbackQuery):
+    async def delete_profile_admin(self, callback: CallbackQuery):
         from database.create_table import CreateTable
         sqlbase_table = CreateTable()
 
