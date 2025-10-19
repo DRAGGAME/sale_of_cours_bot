@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from aiogram import Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
 
 from config import bot, URL_REDIS
@@ -25,7 +26,7 @@ class TelegramBot:
     """
     def __init__(self):
         self.bot = bot
-        self.dp = Dispatcher(storage=RedisStorage.from_url(url=URL_REDIS))
+        self.dp = Dispatcher(storage=MemoryStorage())
 
         self.admin_handlers = AdminHandlers()
         self.begin_handlers = BeginHandler()
@@ -40,7 +41,6 @@ class TelegramBot:
         Основной run
         :return:
         """
-
         sqlbase_create_table = CreateTable()
 
         await sqlbase_create_table.init_pgcrypto()
