@@ -56,7 +56,7 @@ services:
       - password=${password}
       - DATABASE=${DATABASE}
 
-      - HOST_REDIS=${HOST_REDIS}
+      - HOST_REDIS=redis
 
       - TG_API=${TG_API}
       - PROVIDER_TOKEN=${PROVIDER_TOKEN}
