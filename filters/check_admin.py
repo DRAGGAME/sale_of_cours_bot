@@ -43,6 +43,7 @@ class CheckSelectUser(BaseFilter):
         else:
             return False
 
+
 class CheckAdminSetup(BaseFilter):
     def __init__(self, sqlbase: AdminOperation):
         self.sqlbase = sqlbase
