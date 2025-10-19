@@ -18,6 +18,8 @@ logging.basicConfig(
            '%(lineno)d - %(name)s - %(message)s'
 )
 
+dp = Dispatcher()
+
 
 class TelegramBot:
     """
