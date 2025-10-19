@@ -13,6 +13,7 @@ USER = os.getenv('user')
 PASSWORD = os.getenv('password')
 DATABASE = os.getenv('DATABASE')
 
+PASSWORD_ADMIN = os.getenv('PASSWORD_ADMIN')
 PROVIDER_TOKEN = os.getenv('PROVIDER_TOKEN')
 
 bot = Bot(token=TG_KEY, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
