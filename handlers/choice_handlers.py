@@ -45,7 +45,7 @@ class ChoiceHandlers:
     async def choice_page(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
         page = callback_data.page
         action = callback_data.action
-        all_courses = await self.database.select_all_courses()
+        all_courses, msg_main = await self.database.select_all_courses(False)
 
         if action == "next" and page < len(all_courses)-1 :
             page += 1
