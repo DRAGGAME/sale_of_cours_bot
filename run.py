@@ -40,6 +40,7 @@ class TelegramBot:
         Основной run
         :return:
         """
+
         sqlbase_create_table = CreateTable()
 
         await sqlbase_create_table.init_pgcrypto()

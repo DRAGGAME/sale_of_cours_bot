@@ -6,9 +6,9 @@ services:
     container_name: postgres_sale_of_cours
     hostname: postgres_sale_of_cours
     environment:
-      POSTGRES_USER: ${user}
-      POSTGRES_PASSWORD: ${password}
-      POSTGRES_DB: ${DATABASE}
+      POSTGRES_USER: ${USER_POSTGRES}
+      POSTGRES_PASSWORD: ${PASSWORD_POSTGRES}
+      POSTGRES_DB: ${DATABASE_POSTGRES}
       PGDATA: /var/lib/postgresql/pgdata
     ports:
       - "0.0.0.0:5432:5432"
@@ -37,9 +37,10 @@ services:
     container_name: redis
     hostname: redis
     ports:
-      - "0.0.0.0:6379:6379"
+      - "6379:6379"
     volumes:
       - redis-data:/data
+      -
     environment:
       REDIS_PASSWORD: ${PASSWORD_REDIS}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -72,12 +73,14 @@ services:
     depends_on:
       - db
       - redis
+      -
     networks:
       - sale_of_cours_bot_postgres_network
 
 volumes:
   pgdata:
     driver: local
+
   redis-data:
     driver: local
 
