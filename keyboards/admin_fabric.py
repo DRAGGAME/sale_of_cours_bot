@@ -71,10 +71,10 @@ class AdminFabric(KeyboardFactory):
             ).pack()
         )
 
-        button_edit_politic = InlineKeyboardButton(
-            text="Изменить политики",
+        button_edit_main_message = InlineKeyboardButton(
+            text='Изменить "главное" сообщение',
             callback_data=MainMenu(
-                action="edit_politics",
+                action="edit_main_message",
             ).pack()
         )
 
@@ -86,8 +86,9 @@ class AdminFabric(KeyboardFactory):
 
         )
 
-        self.builder_inline.row(button_add_course, button_edit_politic)
-        self.builder_inline.row(button_status_course, button_data_a_course)
+        self.builder_inline.row(button_add_course, button_status_course)
+        self.builder_inline.row(button_data_a_course)
+        self.builder_inline.row(button_edit_main_message)
         self.builder_inline.row(button_clear_admin)
 
         return self.builder_inline.as_markup()
@@ -210,33 +211,6 @@ class AdminFabric(KeyboardFactory):
         )
         self.builder_inline.row(activate_button)
         self.builder_inline.row(back_button)
-
-        return self.builder_inline.as_markup()
-
-    async def politics_keyboard(self) -> InlineKeyboardMarkup:
-        """
-        Изменение политики кондфиницальности
-        :return:
-        """
-        await self.create_builder_inline()
-
-        kond_politic = InlineKeyboardButton(
-            text="Изменить политику кондфинициальности",
-            callback_data=UpdatePoliticInline(
-                type_politics="kond"
-            ).pack()
-        )
-
-        user_politic = InlineKeyboardButton(
-            text="Изменить пользовательское соглашение",
-            callback_data=UpdatePoliticInline(
-                type_politics="user"
-            ).pack()
-        )
-
-        self.builder_inline.add(kond_politic)
-        self.builder_inline.row(user_politic)
-        self.builder_inline.row(self.button_in_main)
 
         return self.builder_inline.as_markup()
 
