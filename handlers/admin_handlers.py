@@ -287,7 +287,7 @@ class AdminHandlers:
         back_panel = await self.admin_fabric_inline.default_back_in_panel()
         if data[1]:
             await callback.message.edit_text(f"Сколько купили курсов за неделю: {data[0]}"
-                                             f"\nСколько вы заработали без вычетов каких-либо процентов: {data[1]}",
+                                             f"\nСколько вам перевели в общем: {data[1]}",
                                              reply_markup=back_panel)
         else:
             await callback.message.edit_text("В течение недели не было продано ни единого курса",

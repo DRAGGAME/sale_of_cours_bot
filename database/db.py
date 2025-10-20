@@ -15,7 +15,6 @@ class Sqlbase:
 
     def __init__(self, pool=None):
         self.pool = pool or _pool
-        print(pg_user)
 
     @classmethod
     async def init_pool(cls, **kwargs):

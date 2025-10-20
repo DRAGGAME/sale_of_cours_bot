@@ -56,7 +56,7 @@ class BeginHandler:
             if main_message == "0":
                 main_message = "Выберите курс"
 
-            await state.update_data(all_courses=all_courses[0][0])
+            await state.update_data(all_courses=all_courses)
 
             kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
 
@@ -81,7 +81,7 @@ class BeginHandler:
             if main_message == "0":
                 main_message = "Выберите курс"
 
-            await state.update_data(all_courses=all_courses[0])
+            await state.update_data(all_courses=all_courses)
             kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
 
             await callback.message.edit_text(f"{main_message}", reply_markup=kb)
@@ -101,7 +101,7 @@ class BeginHandler:
             if main_message == "0":
                 main_message = "Выберите курс"
 
-            await state.update_data(all_courses=all_courses[0])
+            await state.update_data(all_courses=all_courses)
 
             kb = await self.begin_fabric_keyboard.inline_choice_course_keyboard(all_courses, 0)
 

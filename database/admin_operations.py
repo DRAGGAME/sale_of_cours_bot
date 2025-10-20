@@ -76,7 +76,9 @@ class AdminOperation(UserOperation):
         """
         raw_data = await self.execute_query("SELECT * FROM courses ORDER BY id ASC;")
 
-        data_a_courses: list = [raw_data[i:i + 2] for i in range(0, len(raw_data), 2)]
+        data_list = [tuple(record) for record in raw_data]
+
+        data_a_courses: list = [data_list[i:i + 2] for i in range(0, len(data_list), 2)]
 
         return data_a_courses
 

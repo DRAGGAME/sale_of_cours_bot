@@ -45,7 +45,7 @@ class PayHandlers:
             prices=prices,
             reply_markup=keyboard_payment
         )
-        await state.update_data(msg_price=msg, id_channel=data_course[-3])
+        await state.update_data(msg_price=msg.message_id, id_channel=data_course[-3])
 
         await callback.answer()
 
@@ -53,11 +53,12 @@ class PayHandlers:
         await pre_checkout_query.answer(ok=True)
 
     async def successfall_paymant(self, message: Message, state: FSMContext):
-        msg_price: Message = await state.get_value('msg_price')
+        msg_price: str = await state.get_value('msg_price')
         channel_id = await state.get_value('id_channel')
         link = None
 
-        await msg_price.delete()
+        await bot.delete_message(message_id=int(msg_price), chat_id=message.chat.id)
+
         await self.admin_database.insert_new_transaction(str(message.chat.id),
                                                          message.successful_payment.invoice_payload.title(),
                                                          message.successful_payment.telegram_payment_charge_id,

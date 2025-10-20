@@ -19,15 +19,17 @@ class UserOperation(Sqlbase):
 
         """
         if main_handlers:
-            raw_data, main_message = await self.execute_transaction([("SELECT * FROM courses WHERE status=True ORDER BY id ASC;", None),
-                                            ("SELECT main_message FROM settings_table;", None)])
+            raw_data, main_message = await self.execute_transaction(
+                [("SELECT * FROM courses WHERE status=True ORDER BY id ASC;", None),
+                 ("SELECT main_message FROM settings_table;", None)])
             main_message = main_message[0][0]
-
         else:
             raw_data = await self.execute_query("SELECT * FROM courses WHERE status=True ORDER BY id ASC;")
             main_message = None
 
-        data_a_courses: list = [raw_data[i:i + 2] for i in range(0, len(raw_data), 2)]
+        data_list = [tuple(record) for record in raw_data]
+
+        data_a_courses: list = [data_list[i:i + 2] for i in range(0, len(data_list), 2)]
 
         return data_a_courses, main_message
 
