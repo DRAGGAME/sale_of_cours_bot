@@ -159,7 +159,8 @@ class AdminHandlers:
 
             case _:
                 msg_add_course = await callback.answer("Ошибка", show_alert=True)
-        await state.update_data(msg_add_course=msg_add_course)
+        if msg_add_course:
+            await state.update_data(msg_add_course_id=msg_add_course.message_id)
 
         await callback.answer()
 
@@ -169,7 +170,7 @@ class AdminHandlers:
 
         if message.text:
             last_state = await state.get_state()
-            msg_add_course: Message = await state.get_value("msg_add_course")
+            msg_add_course_id: int = await state.get_value("msg_add_course_id")
             if last_state == SetupStates.name:
                 await state.update_data(course_name=message.text)
 
@@ -185,7 +186,9 @@ class AdminHandlers:
                     await state.update_data(course_price=int(price))
 
                 except ValueError:
-                    msg = await msg_add_course.answer("Ваша цена - не число", show_alert=True)
+                    msg = await bot.send_message(chat_id=message.chat.id, text="Ваша цена - не число")
+                    await asyncio.sleep(5)
+                    await msg.delete()
 
             elif last_state == SetupStates.channel:
                 await state.update_data(course_channel=message.text)
@@ -198,14 +201,18 @@ class AdminHandlers:
             await state.set_state(SetupStates.none_state)
             keyboard = await self.admin_fabric_inline.inline_course_button()
             await message.delete()
-            await msg_add_course.edit_text("Перед тем, как добавить курс. Заполните все данные по анкете ниже\n"
-                                           "<pre>"
-                                           f"Имя: {name if name else "нет"}\n"
-                                           f"Описание: {description if description else "нет"}\n"
-                                           f"Цена: {price if price else "нет"}\n"
-                                           f"Айди канала: {channel_id if channel_id else "нет"}"
-                                           "</pre>",
-                                           reply_markup=keyboard)
+            await bot.edit_message_text(
+                chat_id=message.chat.id,
+                message_id=msg_add_course_id,
+                text="Перед тем, как добавить курс. Заполните все данные по анкете ниже\n"
+                     "<pre>"
+                     f"Имя: {name if name else "нет"}\n"
+                     f"Описание: {description if description else "нет"}\n"
+                     f"Цена: {price if price else "нет"}\n"
+                     f"Айди канала: {channel_id if channel_id else "нет"}"
+                     "</pre>",
+                reply_markup=keyboard
+            )
             if msg:
                 await asyncio.sleep(10)
                 await msg.delete()
@@ -290,19 +297,23 @@ class AdminHandlers:
 
         await state.set_state(SetupMainMessage.edit_main_message)
         msg_main = await callback.message.edit_text("Введите приветственное сообщение")
-        await state.update_data(msg_main=msg_main)
+        await state.update_data(msg_main_id=msg_main.message_id)
         await callback.answer()
 
     async def edit_main_message(self, message: Message, state: FSMContext):
-        msg_main: Message = await state.get_value("msg_main")
+        msg_main_id: int = await state.get_value("msg_main_id")
         await self.admin_database.update_main_message(message.text)
         back_panel = await self.admin_fabric_inline.default_back_in_panel()
 
         await state.clear()
 
         await message.delete()
-        await msg_main.edit_text(f"Вы успешно изменили приветственное сообщение на: \n\n{message.text}", reply_markup=back_panel)
-
+        await bot.edit_message_text(
+            chat_id=message.chat.id,
+            message_id=msg_main_id,
+            text=f"Вы успешно изменили приветственное сообщение на: \n\n{message.text}",
+            reply_markup=back_panel
+        )
 
     async def setup_handler(self, message: Message, state: FSMContext):
         password_admin = await self.admin_database.select_password_and_user()

@@ -26,7 +26,7 @@ class TelegramBot:
     """
     def __init__(self):
         self.bot = bot
-        self.dp = Dispatcher(storage=MemoryStorage())
+        self.dp = Dispatcher(storage=RedisStorage.from_url(URL_REDIS))
 
         self.admin_handlers = AdminHandlers()
         self.begin_handlers = BeginHandler()

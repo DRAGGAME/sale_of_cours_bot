@@ -32,26 +32,26 @@ services:
     networks:
       - sale_of_cours_bot_postgres_network
 
-#  redis:
-#    image: redis:6.2.6-alpine
-#    container_name: redis
-#    hostname: redis
-#    ports:
-#      - "6379:6379"
-#    volumes:
-#      - ./redis-data:/data
-#      - ./redis.conf:/etc/redis/redis.conf
-#
-#    environment:
-#      REDIS_PASSWORD: ${PASSWORD_REDIS}
-#      REDIS_DATABASES: ${REDIS_DATABASES}
-#      REDIS_MAXMEMORY: 1.5GB
-#      REDIS_APPENDONLY: "yes"
-#
-#    command: redis-server /etc/redis/redis.conf
-#
-#    networks:
-#      - sale_of_cours_bot_postgres_network
+  redis:
+    image: redis:6.2.6-alpine
+    container_name: redis
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+      - ./redis.conf:/etc/redis/redis.conf
+
+    environment:
+      REDIS_PASSWORD: ${PASSWORD_REDIS}
+      REDIS_DATABASES: ${REDIS_DATABASES}
+      REDIS_MAXMEMORY: 1.5GB
+      REDIS_APPENDONLY: "yes"
+
+    command: redis-server /etc/redis/redis.conf
+
+    networks:
+      - sale_of_cours_bot_postgres_network
 
   tg_sale_of_course:
     build:
@@ -75,7 +75,7 @@ services:
 
     depends_on:
       - db
-#      - redis
+      - redis
 
     networks:
       - sale_of_cours_bot_postgres_network
@@ -84,8 +84,8 @@ volumes:
   pgdata:
     driver: local
 
-#  redis-data:
-#    driver: local
+  redis-data:
+    driver: local
 
 networks:
   sale_of_cours_bot_postgres_network:
