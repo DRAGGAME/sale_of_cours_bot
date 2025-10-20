@@ -13,7 +13,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./pgdata:/var/lib/postgresql/pgdata
+      - /pgdata:/var/lib/postgresql/pgdata
     command: >
       postgres
       -c max_connections=10000
@@ -39,7 +39,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./redis-data:/data
+      - /redis-data:/data
       - ./redis.conf:/etc/redis/redis.conf
 
     environment:
@@ -73,6 +73,9 @@ services:
       TG_API: ${TG_API}
       PROVIDER_TOKEN: ${PROVIDER_TOKEN}
 
+    volumes:
+      - ./logs:/logs
+
     depends_on:
       - db
       - redis
@@ -85,6 +88,9 @@ volumes:
     driver: local
 
   redis-data:
+    driver: local
+
+  logs:
     driver: local
 
 networks:
