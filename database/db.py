@@ -1,4 +1,4 @@
-from typing import Union, List, Tuple, Optional
+from typing import Union, Tuple, List, Optional
 import asyncpg
 
 from config import HOST_POSTGRES, PASSWORD_POSTGRES, DATABASE_POSTGRES, USER_POSTGRES
@@ -15,18 +15,20 @@ class Sqlbase:
 
     def __init__(self, pool=None):
         self.pool = pool or _pool
+        print(pg_user)
 
     @classmethod
     async def init_pool(cls, **kwargs):
         """
         Создаёт глобальный пул, который будет использоваться всеми наследниками.
         """
+
         global _pool
         if _pool is None:
             _pool = await asyncpg.create_pool(
                 host=pg_host,
-                USER_POSTGRES=pg_user,
-                PASSWORD_POSTGRES=pg_password,
+                user=pg_user,
+                password=pg_password,
                 database=pg_database,
                 min_size=1,
                 max_size=10_000,
