@@ -1,6 +1,7 @@
 import asyncio
 
 from aiogram import Router, F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
@@ -226,10 +227,12 @@ class AdminHandlers:
                                              "второй раз для деактивации или активации курса",
                                              reply_markup=keyboard)
         else:
-            kb_main = await self.admin_fabric_inline.main_menu_admin()
-            await callback.message.edit_text(
-                "Похоже, у вас нет курсов. Добавьте их в главном меню", reply_markup=kb_main)
-
+            try:
+                kb_main = await self.admin_fabric_inline.main_menu_admin()
+                await callback.message.edit_text(
+                    "Похоже, у вас нет курсов. Добавьте их в главном меню", reply_markup=kb_main)
+            except TelegramBadRequest:
+                pass
     async def action_course(self, callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
         number_course_id: int = callback_data.number_course_id
         course = await self.admin_database.select_course(int(number_course_id))
