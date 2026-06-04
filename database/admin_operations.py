@@ -113,3 +113,11 @@ class AdminOperation(UserOperation):
         :return:
         """
         await self.execute_query("""UPDATE settings_table SET main_message = $1""", (main_message, ))
+
+    async def update_for_setup(self) -> bool:
+        query = """
+                UPDATE settings_table SET admin_chat_id = 0 RETURNING TRUE;
+                """
+        status = await self.execute_query(query)
+
+        return status[0][0]

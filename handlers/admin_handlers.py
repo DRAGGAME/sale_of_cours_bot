@@ -379,13 +379,10 @@ class AdminHandlers:
         await msg.delete()
 
     async def delete_profile_admin(self, callback: CallbackQuery):
-        from database.create_table import CreateTable
-        sqlbase_table = CreateTable()
 
-        await sqlbase_table.delete_settings_table_table()
-        await sqlbase_table.create_settings_table()
-
-        await callback.message.edit_text("Данные администратора сброшены. Введите /setup для начала регистрации",
-                                         show_alert=True)
-        await asyncio.sleep(20)
-        await callback.message.delete()
+        is_update = await self.admin_database.update_for_setup()
+        if is_update:
+            await callback.message.edit_text("Данные администратора сброшены. Введите /setup для начала регистрации",
+                                             show_alert=True)
+            await asyncio.sleep(20)
+            await callback.message.delete()

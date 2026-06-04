@@ -32,7 +32,7 @@ class Sqlbase:
                 database=pg_database,
                 setup=switch_schema,
                 min_size=1,
-                max_size=10_000,
+                max_size=100,
                 **kwargs
             )
         return _pool
