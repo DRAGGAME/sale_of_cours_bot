@@ -68,7 +68,8 @@ class CheckAdmin(BaseFilter):
     async def __call__(self, message: Message) -> bool:
         admin = await self.sqlbase.select_admin_chat()
 
-        if admin == str(message.chat.id):
-            return True
-        else:
-            return False
+
+        if admin:
+            if admin == str(message.chat.id):
+                return True
+        return False

@@ -41,15 +41,12 @@ class TelegramBot:
         :return:
         """
         sqlbase_create_table = CreateTable()
-
         await sqlbase_create_table.init_pgcrypto()
         await sqlbase_create_table.create_accepted_users_table()
         await sqlbase_create_table.create_settings_table()
         await sqlbase_create_table.create_course_table()
         await sqlbase_create_table.create_transaction_table()
-
         await self.dp.start_polling(self.bot, skip_updates=False)
-
         await Sqlbase.close_pool()
 
 
