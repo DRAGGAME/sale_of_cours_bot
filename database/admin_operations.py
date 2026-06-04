@@ -1,5 +1,6 @@
 from typing import List
 
+from config import PASSWORD_ADMIN
 from database.user_operation import UserOperation
 
 
@@ -118,6 +119,9 @@ class AdminOperation(UserOperation):
         query = """
                 UPDATE settings_table SET admin_chat_id = 0 RETURNING TRUE;
                 """
+
+        await self.execute_query("""INSERT INTO settings_table (password_admin)
+                                    VALUES (crypt($1, gen_salt('bf')));""", (PASSWORD_ADMIN,))
         status = await self.execute_query(query)
 
         return status[0][0]
