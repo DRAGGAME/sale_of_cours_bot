@@ -21,7 +21,8 @@ class Sqlbase:
         """
         Создаёт глобальный пул, который будет использоваться всеми наследниками.
         """
-
+        async def switch_schema(connection: asyncpg.Connection):
+            await connection.execute(f'''SET search_path TO "prod"''')
         global _pool
         if _pool is None:
             _pool = await asyncpg.create_pool(
@@ -29,6 +30,7 @@ class Sqlbase:
                 user=pg_user,
                 password=pg_password,
                 database=pg_database,
+                setup=switch_schema,
                 min_size=1,
                 max_size=10_000,
                 **kwargs
