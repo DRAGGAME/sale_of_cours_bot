@@ -31,23 +31,26 @@ class PayHandlers:
         self.router_pay.callback_query.register(self.cancel_paymant, PayCourse.filter(F.action=="cancel_payment"))
 
     async def pay_course(self, callback: CallbackQuery, state: FSMContext):
-        data_course = await state.get_value('data_course')
-        keyboard_payment = await self.pay_fabric_kb.payment_create_kb(data_course[-4])
+        if PROVIDER_TOKEN:
+            data_course = await state.get_value('data_course')
+            keyboard_payment = await self.pay_fabric_kb.payment_create_kb(data_course[-4])
 
-        prices = [LabeledPrice(label='Оплата товара', amount=(data_course[2]*100))]
-        msg = await callback.message.answer_invoice(
-            title=data_course[1],
-            description=f"Оплата курса {data_course[1] if len(data_course[1]) else ""}",
-            payload=f"{data_course[1]}",
-            provider_token=PROVIDER_TOKEN,
-            currency="RUB",
-            send_email_to_provider=True,
-            prices=prices,
-            reply_markup=keyboard_payment
-        )
-        await state.update_data(msg_price=msg.message_id, id_channel=data_course[-3])
+            prices = [LabeledPrice(label='Оплата товара', amount=(data_course[2]*100))]
+            msg = await callback.message.answer_invoice(
+                title=data_course[1],
+                description=f"Оплата курса {data_course[1] if len(data_course[1]) else ""}",
+                payload=f"{data_course[1]}",
+                provider_token=PROVIDER_TOKEN,
+                currency="RUB",
+                send_email_to_provider=True,
+                prices=prices,
+                reply_markup=keyboard_payment
+            )
+            await state.update_data(msg_price=msg.message_id, id_channel=data_course[-3])
+            await callback.answer()
+        else:
+            await callback.answer(text="Оплата невозможна. Некуда переводить", show_alert=True)
 
-        await callback.answer()
 
     async def pre_checkout_handler(self, pre_checkout_query: PreCheckoutQuery, state: FSMContext):
         await pre_checkout_query.answer(ok=True)
